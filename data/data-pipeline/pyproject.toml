@@ -17,7 +17,7 @@ packages = [
 
 [tool.poetry.dependencies]
 CensusData = "^1.13"
-certifi = "^2022.12.07" # explicit callout due to https://pyup.io/v/52365/f17/
+certifi = ">= 2024.07.04" # Due to https://data.safetycli.com/v/72083/f17
 click = "8.0.4"  # pinning for now per https://github.com/psf/black/issues/2964
 dynaconf = "^3.1.4"
 geopandas = "^0.11.0"
@@ -29,19 +29,20 @@ marshmallow-dataclass = "^8.5.3"
 marshmallow-enum = "^1.5.1"
 matplotlib = "^3.4.2"
 numpy = "^1.22.1"
-pandas = "^1.2.5"
+pandas = "~1.4.3"
 pylint = "^2.11.1"
-pillow = "9.3.0"
-python = "^3.8"
+pillow = "9.3.0" # Newer versions break tile generation
+python = "^3.10"
 pypandoc = "^1.6.3"
 PyYAML = "^6.0"
 requests = "^2.25.1"
-tqdm = "4.62.0"
+tqdm = "^4.66.3"
 types-requests = "^2.25.0"
 us = "^2.0.2"
 xlsxwriter = "^2.0.0"
 pydantic = "^1.9.0"
 Rtree = "^1.0.0"
+fiona = "~1.8.21"
 
 [tool.poetry.dev-dependencies]
 black = {version = "^21.6b0", allow-prereleases = true}
@@ -59,7 +60,7 @@ pandas-vet = "^0.2.2"
 pytest-snapshot = "^0.8.1"
 seaborn = "^0.11.2"
 papermill = "^2.3.4"
-jupyterlab = "3.4.4"
+jupyterlab = "^3.6.7"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"
