@@ -472,6 +472,7 @@ class ScoreETL(ExtractTransformLoad):
             field_names.EXPECTED_POPULATION_LOSS_RATE_FIELD,
             field_names.CENSUS_DECENNIAL_HIGH_SCHOOL_ED_FIELD_2009,
             field_names.CENSUS_DECENNIAL_POVERTY_LESS_THAN_100_FPL_FIELD_2009,
+            field_names.CENSUS_DECENNIAL_POVERTY_LESS_THAN_200_FPL_FIELD_2009,
             field_names.CENSUS_DECENNIAL_UNEMPLOYMENT_FIELD_2009,
             field_names.CENSUS_UNEMPLOYMENT_FIELD_2010,
             field_names.CENSUS_POVERTY_LESS_THAN_100_FPL_FIELD_2010,

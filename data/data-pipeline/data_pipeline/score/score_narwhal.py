@@ -1013,6 +1013,47 @@ class ScoreNarwhal(Score):
             self.df[field_names.SCORE_N_COMMUNITIES],
         )
 
+    def _mark_territory_dacs(self) -> None:
+        """Territory tracts that are flagged as low income are Score N communities.
+        """
+        self.df[field_names.SCORE_N_COMMUNITIES] = np.where(
+            self.df[field_names.GEOID_TRACT_FIELD]
+                .str.startswith(tuple(constants.TILES_ISLAND_AREA_FIPS_CODES)) &
+            self.df[field_names.FPL_200_SERIES_IMPUTED_AND_ADJUSTED],
+            True,
+            self.df[field_names.SCORE_N_COMMUNITIES],
+        )
+
+    def _mark_poverty_flag(self) -> None:
+        """Combine poverty less than 200% for territories and update the income flag."""
+        # First we set the low income flag for non-territories by themselves, this
+        # way we don't change the original outcome if we include territories.
+        self.df[field_names.FPL_200_SERIES_IMPUTED_AND_ADJUSTED] = (
+            self.df[
+                # UPDATE: Pull the imputed poverty statistic
+                field_names.POVERTY_LESS_THAN_200_FPL_IMPUTED_FIELD
+                + field_names.PERCENTILE_FIELD_SUFFIX
+            ]
+            >= self.LOW_INCOME_THRESHOLD
+        )
+
+        # Now we set the low income flag only for territories, but we need to rank them
+        # with all other tracts.
+        (
+            self.df,
+            island_areas_poverty_200_criteria_field_name,
+        ) = self._combine_island_areas_with_states_and_set_thresholds(
+            df=self.df,
+            column_from_island_areas=field_names.CENSUS_DECENNIAL_POVERTY_LESS_THAN_200_FPL_FIELD_2009,
+            column_from_decennial_census=field_names.POVERTY_LESS_THAN_200_FPL_IMPUTED_FIELD,
+            combined_column_name=field_names.COMBINED_POVERTY_LESS_THAN_200_FPL_FIELD_2010,
+            threshold_cutoff_for_island_areas=self.LOW_INCOME_THRESHOLD,
+        )
+        self.df.loc[self.df[field_names.GEOID_TRACT_FIELD].str.startswith(tuple(constants.TILES_ISLAND_AREA_FIPS_CODES)),
+                    field_names.FPL_200_SERIES_IMPUTED_AND_ADJUSTED] = (
+            self.df[island_areas_poverty_200_criteria_field_name] >= self.LOW_INCOME_THRESHOLD
+        )
+
     def _get_percent_of_tract_that_is_dac(self) -> float:
         """Per the October 7th compromise (#1988),
         tracts can be partially DACs if some portion of the tract is tribal land.
@@ -1034,14 +1075,7 @@ class ScoreNarwhal(Score):
         logger.debug("Adding Score Narhwal")
         self.df[field_names.THRESHOLD_COUNT] = 0
 
-        self.df[field_names.FPL_200_SERIES_IMPUTED_AND_ADJUSTED] = (
-            self.df[
-                # UPDATE: Pull the imputed poverty statistic
-                field_names.POVERTY_LESS_THAN_200_FPL_IMPUTED_FIELD
-                + field_names.PERCENTILE_FIELD_SUFFIX
-            ]
-            >= self.LOW_INCOME_THRESHOLD
-        )
+        self._mark_poverty_flag()
 
         self.df[field_names.N_CLIMATE] = self._climate_factor()
         self.df[field_names.N_ENERGY] = self._energy_factor()
@@ -1065,6 +1099,7 @@ class ScoreNarwhal(Score):
         self.df[field_names.CATEGORY_COUNT] = self.df[factors].sum(axis=1)
         self.df[field_names.SCORE_N_COMMUNITIES] = self.df[factors].any(axis=1)
         self._mark_tribal_dacs()
+        self._mark_territory_dacs()
         self.df[
             field_names.SCORE_N_COMMUNITIES
             + field_names.PERCENTILE_FIELD_SUFFIX

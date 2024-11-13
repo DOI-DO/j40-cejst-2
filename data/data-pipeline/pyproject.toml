@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "justice40-data-pipeline"
-version = "0.1.0"
+version = "1.0.1"
 description = "ETL, Score and Map Generation of Justice 40 Tool"
 authors = ["Justice40 Engineering <j40-engineering@lists.usds.gov>"]
 keywords = ["justice40", "environmental_justice", "python", "etl"]
