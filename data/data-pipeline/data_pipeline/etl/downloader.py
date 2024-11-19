@@ -10,6 +10,7 @@ from data_pipeline.utils import get_module_logger
 
 logger = get_module_logger(__name__)
 
+
 class Downloader:
     """A simple class to encapsulate the download capabilities of the application"""
 
@@ -44,6 +45,7 @@ class Downloader:
             file_contents = response.content
             logger.debug("Downloaded.")
         else:
+            # pylint: disable-next=broad-exception-raised
             raise Exception(
                 f"HTTP response {response.status_code} from url {file_url}. Info: {response.content}"
             )

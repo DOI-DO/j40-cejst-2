@@ -58,6 +58,7 @@ data_source_option = click.option(
     help=dataset_cli_help,
 )
 
+
 @click.group()
 def cli():
     """Defines a click group for the commands below"""
@@ -415,6 +416,7 @@ def clear_data_source_cache(dataset: str):
 
     log_goodbye()
 
+
 @cli.command(
     help="Generate scoring and tiles",
 )
@@ -440,6 +442,7 @@ def full_run(ctx, use_cache):
     ctx.invoke(extract_data_sources, dataset=None, use_cache=use_cache)
     ctx.invoke(etl_run, dataset=None, use_cache=use_cache)
     ctx.invoke(full_post_etl)
+
 
 def log_title(title: str, subtitle: str = None):
     """Logs a title in our fancy title format"""

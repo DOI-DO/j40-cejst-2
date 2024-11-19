@@ -1014,12 +1014,12 @@ class ScoreNarwhal(Score):
         )
 
     def _mark_territory_dacs(self) -> None:
-        """Territory tracts that are flagged as low income are Score N communities.
-        """
+        """Territory tracts that are flagged as low income are Score N communities."""
         self.df[field_names.SCORE_N_COMMUNITIES] = np.where(
-            self.df[field_names.GEOID_TRACT_FIELD]
-                .str.startswith(tuple(constants.TILES_ISLAND_AREA_FIPS_CODES)) &
-            self.df[field_names.FPL_200_SERIES_IMPUTED_AND_ADJUSTED],
+            self.df[field_names.GEOID_TRACT_FIELD].str.startswith(
+                tuple(constants.TILES_ISLAND_AREA_FIPS_CODES)
+            )
+            & self.df[field_names.FPL_200_SERIES_IMPUTED_AND_ADJUSTED],
             True,
             self.df[field_names.SCORE_N_COMMUNITIES],
         )
@@ -1049,9 +1049,14 @@ class ScoreNarwhal(Score):
             combined_column_name=field_names.COMBINED_POVERTY_LESS_THAN_200_FPL_FIELD_2010,
             threshold_cutoff_for_island_areas=self.LOW_INCOME_THRESHOLD,
         )
-        self.df.loc[self.df[field_names.GEOID_TRACT_FIELD].str.startswith(tuple(constants.TILES_ISLAND_AREA_FIPS_CODES)),
-                    field_names.FPL_200_SERIES_IMPUTED_AND_ADJUSTED] = (
-            self.df[island_areas_poverty_200_criteria_field_name] >= self.LOW_INCOME_THRESHOLD
+        self.df.loc[
+            self.df[field_names.GEOID_TRACT_FIELD].str.startswith(
+                tuple(constants.TILES_ISLAND_AREA_FIPS_CODES)
+            ),
+            field_names.FPL_200_SERIES_IMPUTED_AND_ADJUSTED,
+        ] = (
+            self.df[island_areas_poverty_200_criteria_field_name]
+            >= self.LOW_INCOME_THRESHOLD
         )
 
     def _get_percent_of_tract_that_is_dac(self) -> float:

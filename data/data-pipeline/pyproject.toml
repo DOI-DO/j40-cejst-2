@@ -27,11 +27,9 @@ jupyter = "^1.0.0"
 jupyter-contrib-nbextensions = "^0.5.1"
 marshmallow-dataclass = "^8.5.3"
 marshmallow-enum = "^1.5.1"
-matplotlib = "^3.4.2"
 numpy = "^1.22.1"
 pandas = "~1.4.3"
 pylint = "^2.11.1"
-pillow = "9.3.0" # Newer versions break tile generation
 python = "^3.10"
 pypandoc = "^1.6.3"
 PyYAML = "^6.0"
@@ -44,8 +42,8 @@ pydantic = "^1.9.0"
 Rtree = "^1.0.0"
 fiona = "~1.8.21"
 
-[tool.poetry.dev-dependencies]
-black = {version = "^21.6b0", allow-prereleases = true}
+[tool.poetry.group.dev.dependencies]
+black = "^21"
 flake8 = "^3.9.2"
 liccheck = "^0.6.2"
 mypy = "^0.910"
@@ -126,6 +124,7 @@ authorized_licenses = [
   "apache",
   "apache 2.0",
   "apache license 2.0",
+  "apache license, version 2.0",
   "apache software license",
   "apache software",
   "gnu lgpl",
@@ -145,3 +144,5 @@ authorized_licenses = [
   "gpl v3",
   "historical permission notice and disclaimer (hpnd)",
 ]
+[tool.liccheck.authorized_packages]
+ypy-websocket="0.8.4"

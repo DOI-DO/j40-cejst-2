@@ -39,6 +39,7 @@ def _choose_best_mask(
     for mask in masks_in_priority_order:
         if any(geo_df[mask][column_to_impute].notna()):
             return mask
+    # pylint: disable-next=broad-exception-raised
     raise Exception("No mask found")
 
 
