@@ -741,7 +741,7 @@
   },
   "explore.map.page.map.territoryFocus.lower48.short": {
     "defaultMessage": "48",
-    "description": "On the explore the map page, on the map, the abbreviated name indicating the bounds of \n      the Lower 48 states\n    "
+    "description": "On the explore the map page, on the map, the abbreviated name indicating the bounds of\n      the Lower 48 states\n    "
   },
   "explore.map.page.map.territoryFocus.puerto_rico.long": {
     "defaultMessage": "Puerto Rico",
@@ -933,11 +933,11 @@
   },
   "explore.map.page.side.panel.indicator.description.exp.bld.loss": {
     "defaultMessage": "Economic loss to building value resulting from natural hazards each year",
-    "description": "Navigate to the explore the map page. When the map is in view, click on the map. The side \n    panel will show an indicator description of Economic loss rate to buildings resulting from natural hazards"
+    "description": "Navigate to the explore the map page. When the map is in view, click on the map. The side\n    panel will show an indicator description of Economic loss rate to buildings resulting from natural hazards"
   },
   "explore.map.page.side.panel.indicator.description.exp.pop.loss": {
     "defaultMessage": "Fatalities and injuries resulting from natural hazards each year",
-    "description": "Navigate to the explore the map page. When the map is in view, click on the map. The side panel will show an indicator description of Economic loss rate to the population in fatalities and \n      injuries resulting from natural hazards"
+    "description": "Navigate to the explore the map page. When the map is in view, click on the map. The side panel will show an indicator description of Economic loss rate to the population in fatalities and\n      injuries resulting from natural hazards"
   },
   "explore.map.page.side.panel.indicator.description.flooding": {
     "defaultMessage": "Projected risk to properties from projected floods, from tides, rain, riverine and storm surges within 30 years",
@@ -953,7 +953,7 @@
   },
   "explore.map.page.side.panel.indicator.description.high.ed": {
     "defaultMessage": "Percent of the census tract's population 15 or older not enrolled in college, university, or graduate school",
-    "description": "Navigate to the explore the map page. When the map is in view, click on the map. The side panel will show an indicator description of Percent of the census tract's population 15 or older not \n      enrolled in college, university, or graduate school"
+    "description": "Navigate to the explore the map page. When the map is in view, click on the map. The side panel will show an indicator description of Percent of the census tract's population 15 or older not\n      enrolled in college, university, or graduate school"
   },
   "explore.map.page.side.panel.indicator.description.high.school": {
     "defaultMessage": "Percent of people ages 25 years or older whose high school education is less than a high school diploma",
@@ -977,7 +977,7 @@
   },
   "explore.map.page.side.panel.indicator.description.leadPaint": {
     "defaultMessage": "Share of homes that are likely to have lead paint",
-    "description": "Navigate to the explore the map page. When the map is in view, click on the map. The side panel will show an indicator description of Share of homes that are likely to have lead paint   \n    "
+    "description": "Navigate to the explore the map page. When the map is in view, click on the map. The side panel will show an indicator description of Share of homes that are likely to have lead paint\n    "
   },
   "explore.map.page.side.panel.indicator.description.leaky.tanks": {
     "defaultMessage": "Formula of the density of leaking underground storage tanks and number of all active underground storage tanks within 1500 feet of the census tract boundaries",
@@ -1025,7 +1025,7 @@
   },
   "explore.map.page.side.panel.indicator.description.unemploy": {
     "defaultMessage": "Number of unemployed people as a part of the labor force",
-    "description": "Navigate to the explore the map page. When the map is in view, click on the map. The side \n    panel will show an indicator description of Number of unemployed people as a part of the labor force"
+    "description": "Navigate to the explore the map page. When the map is in view, click on the map. The side\n    panel will show an indicator description of Number of unemployed people as a part of the labor force"
   },
   "explore.map.page.side.panel.indicator.description.wasteWater": {
     "defaultMessage": "Modeled toxic concentrations at parts of streams within 500 meters",
@@ -1145,7 +1145,7 @@
   },
   "explore.map.page.side.panel.indicator.poverty": {
     "defaultMessage": "Poverty",
-    "description": "Navigate to the explore the map page. When the map is in view, click on the map. The side panel will show Unemployment"
+    "description": "Navigate to the explore the map page. When the map is in view, click on the map. The side panel will show Poverty"
   },
   "explore.map.page.side.panel.indicator.prox.haz": {
     "defaultMessage": "Proximity to hazardous waste facilities",
@@ -1427,6 +1427,10 @@
     "defaultMessage": "The {numPoints} that are Federally Recognized Tribes in this tract are are {also} considered disadvantaged.",
     "description": "Navigate to the explore the map page. Click on tract, The {numPoints} that are Federally Recognized Tribes in this tract ares are {also} considered disadvantaged."
   },
+  "explore.map.page.side.panel.prio.copy.prio.island.li": {
+    "defaultMessage": "This tract is considered disadvantaged because it meets the low income threshold <bold>AND</bold> is located in a U.S. Territory.",
+    "description": "Navigate to the explore the map page. Click on tract, The side panel will show This tract is considered disadvantaged. It is an island territory that meets an adjusted low income threshold."
+  },
   "explore.map.page.side.panel.prio.copy.prio.n.burden": {
     "defaultMessage": "This tract is considered disadvantaged because it meets {burdens} burden threshold <bold>AND</bold> the associated socioeconomic threshold.",
     "description": "Navigate to the explore the map page. Click on tract, This tract is considered disadvantaged because it meets {burdens} burden thresholds <bold>AND</bold> the associated socioeconomic threshold."
@@ -1453,7 +1457,7 @@
   },
   "explore.map.page.side.panel.tribalInfo.landAreaName": {
     "defaultMessage": "Land Area Name:",
-    "description": "Navigate to the explore the map page. Click on Tribal Lands, when the map is in view, \n    click on the map. The side panel will show the land area name of the feature selected"
+    "description": "Navigate to the explore the map page. Click on Tribal Lands, when the map is in view,\n    click on the map. The side panel will show the land area name of the feature selected"
   },
   "explore.map.page.side.panel.version.title": {
     "defaultMessage": "Methodology version {version}",
@@ -1465,7 +1469,7 @@
   },
   "explore.map.page.under.map.download.draft.ptag.1": {
     "defaultMessage": "<link1>Download the data sources</link1> used in the CEJST (.csv, .xlxs, .pdf that describes how to use the list, and a codebook, {downloadFileSize} unzipped). Last updated: {dateUpdated}.",
-    "description": "\n      Navigate to the explore the map page. Under the map, you will see a link that is placed below the \n      map that will download the data packet\n    "
+    "description": "\n      Navigate to the explore the map page. Under the map, you will see a link that is placed below the\n      map that will download the data packet\n    "
   },
   "explore.map.page.under.map.note.on.territories.intro": {
     "defaultMessage": "U.S. territories note",

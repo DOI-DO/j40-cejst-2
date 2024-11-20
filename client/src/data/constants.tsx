@@ -1,5 +1,7 @@
-import { LngLatBoundsLike } from "maplibre-gl";
-import { isMobile as isMobileReactDeviceDetect } from "react-device-detect";
+/* eslint quotes: [2, "double"] */
+
+import {LngLatBoundsLike} from "maplibre-gl";
+import {isMobile as isMobileReactDeviceDetect} from "react-device-detect";
 
 export const isMobile = isMobileReactDeviceDetect;
 
@@ -76,6 +78,13 @@ export const SIDE_PANEL_STATE_VALUES = {
   PUERTO_RICO: "Puerto Rico",
   ISLAND_AREAS: "Island Areas",
 };
+
+/**
+ * Note that the FIPS code is a string
+ * The FIPS codes listed are:
+ * 60: American Samoa, 66: Guam, 69: N. Mariana Islands, 78: US Virgin Islands
+ */
+export const TILES_ISLAND_AREA_FIPS_CODES = ["60", "66", "69", "78"];
 
 // Climate category
 export const IS_CLIMATE_FACTOR_DISADVANTAGED = "N_CLT";
@@ -221,7 +230,7 @@ export const IS_EXCEEDS_THRESH_FOR_ISLAND_AREA_BELOW_100_POVERTY = "IA_POV_ET";
 
 export const IS_WORKFORCE_EXCEED_BOTH_SOCIO_INDICATORS = "N_WKFC_EBSI";
 
-export const HIGH_SCHOOL_PROPERTY_PERCENTILE = `HSEF`;
+export const HIGH_SCHOOL_PROPERTY_PERCENTILE = "HSEF";
 export const IS_LOW_HS_EDUCATION_LOW_HIGHER_ED_PRIORITIZED = "LHE";
 export const ISLAND_AREAS_HS_EDU_PERCENTAGE_FIELD = "IAHSEF";
 export const ISLAND_AREA_LOW_HS_EDU = "IALHE";
