@@ -65,7 +65,9 @@ def compare_score(compare_to_version: str):
 
     # TODO: transition to downloader code when it's available
     production_score_url = f"https://justice40-data.s3.amazonaws.com/data-versions/{compare_to_version}/data/score/csv/full/usa.csv"
-    production_score_path = WORKING_PATH / "usa.csv"
+    production_score_path = (
+        WORKING_PATH / f"prod-score-csv-full-{compare_to_version}-usa.csv"
+    )
 
     log_info(f"Fetching score version {compare_to_version} from AWS")
     production_score_path.parent.mkdir(parents=True, exist_ok=True)
@@ -200,7 +202,7 @@ def compare_score(compare_to_version: str):
         " The number of tracts match!\n"
         if len(production_disadvantaged_tracts_set)
         == len(local_disadvantaged_tracts_set)
-        else f" The difference is {abs(len(production_disadvantaged_tracts_set) - len(local_disadvantaged_tracts_set)):,} tract(s).\n"
+        else f" The difference is {abs(len(production_disadvantaged_tracts_set) - len(local_disadvantaged_tracts_set))} tract(s).\n"
     )
 
     removed_tracts = production_disadvantaged_tracts_set.difference(
@@ -209,19 +211,25 @@ def compare_score(compare_to_version: str):
     added_tracts = local_disadvantaged_tracts_set.difference(
         production_disadvantaged_tracts_set
     )
+    removed_tracts_str = ", ".join(list(removed_tracts))
+    added_tracts_str = ", ".join(list(added_tracts))
 
     log_info(
-        f"There are {len(removed_tracts):,} tract(s) marked as disadvantaged in the prod score that are not disadvantaged in the local score."
+        f"There are {len(removed_tracts):,} tract(s) marked as disadvantaged in the prod "
+        "score that are not disadvantaged in the local score. Those tracts are:"
     )
+    log_info(removed_tracts_str)
     log_info(
-        f"There are {len(added_tracts):,} tract(s) marked as disadvantaged in the local score that are not disadvantaged in the prod score."
+        f"There are {len(added_tracts):,} tract(s) marked as disadvantaged in the local "
+        "score that are not disadvantaged in the prod score. Those tracts are:"
     )
+    log_info(added_tracts_str)
 
     summary += (
         f"* There are {len(removed_tracts):,} tract(s) marked as disadvantaged in the production score that are not disadvantaged in the locally"
-        " generated score (i.e. disadvantaged tracts that were removed by the new score)."
+        f" generated score (i.e. disadvantaged tracts that were removed by the new score). Those tracts are:\n{removed_tracts_str}\n"
         f" There are {len(added_tracts):,} tract(s) marked as disadvantaged in the locally generated score that are not disadvantaged in the"
-        " production score (i.e. disadvantaged tracts that were added by the new score).\n"
+        f" production score (i.e. disadvantaged tracts that were added by the new score). Those tracts are:\n{added_tracts_str}\n\n"
     )
 
     try:

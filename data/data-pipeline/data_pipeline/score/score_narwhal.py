@@ -807,7 +807,7 @@ class ScoreNarwhal(Score):
             island_areas_unemployment_criteria_field_name,
         ) = self._combine_island_areas_with_states_and_set_thresholds(
             df=self.df,
-            column_from_island_areas=field_names.CENSUS_DECENNIAL_UNEMPLOYMENT_FIELD_2009,
+            column_from_island_areas=field_names.CENSUS_DECENNIAL_UNEMPLOYMENT_FIELD_2019,
             column_from_decennial_census=field_names.CENSUS_UNEMPLOYMENT_FIELD_2010,
             combined_column_name=field_names.COMBINED_UNEMPLOYMENT_2010,
             threshold_cutoff_for_island_areas=self.ENVIRONMENTAL_BURDEN_THRESHOLD,
@@ -827,7 +827,7 @@ class ScoreNarwhal(Score):
             island_areas_poverty_criteria_field_name,
         ) = self._combine_island_areas_with_states_and_set_thresholds(
             df=self.df,
-            column_from_island_areas=field_names.CENSUS_DECENNIAL_POVERTY_LESS_THAN_100_FPL_FIELD_2009,
+            column_from_island_areas=field_names.CENSUS_DECENNIAL_POVERTY_LESS_THAN_100_FPL_FIELD_2019,
             column_from_decennial_census=field_names.CENSUS_POVERTY_LESS_THAN_100_FPL_FIELD_2010,
             combined_column_name=field_names.COMBINED_POVERTY_LESS_THAN_100_FPL_FIELD_2010,
             threshold_cutoff_for_island_areas=self.ENVIRONMENTAL_BURDEN_THRESHOLD,
@@ -848,14 +848,14 @@ class ScoreNarwhal(Score):
         # refactor.
         self.df[field_names.ISLAND_LOW_MEDIAN_INCOME_PCTILE_THRESHOLD] = (
             self.df[
-                field_names.LOW_CENSUS_DECENNIAL_AREA_MEDIAN_INCOME_PERCENT_FIELD_2009
+                field_names.LOW_CENSUS_DECENNIAL_AREA_MEDIAN_INCOME_PERCENT_FIELD_2019
                 + field_names.PERCENTILE_FIELD_SUFFIX
             ]
             >= self.ENVIRONMENTAL_BURDEN_THRESHOLD
         )
 
         self.df[field_names.ISLAND_AREAS_LOW_HS_EDUCATION_FIELD] = (
-            self.df[field_names.CENSUS_DECENNIAL_HIGH_SCHOOL_ED_FIELD_2009]
+            self.df[field_names.CENSUS_DECENNIAL_HIGH_SCHOOL_ED_FIELD_2019]
             >= self.LACK_OF_HIGH_SCHOOL_MINIMUM_THRESHOLD
         )
 
@@ -890,7 +890,7 @@ class ScoreNarwhal(Score):
             100
             * workforce_combined_criteria_for_island_areas.sum()
             # Choosing a random column from island areas to calculate the denominator.
-            / self.df[field_names.CENSUS_DECENNIAL_UNEMPLOYMENT_FIELD_2009]
+            / self.df[field_names.CENSUS_DECENNIAL_UNEMPLOYMENT_FIELD_2019]
             .notnull()
             .sum()
         )
@@ -1044,7 +1044,7 @@ class ScoreNarwhal(Score):
             island_areas_poverty_200_criteria_field_name,
         ) = self._combine_island_areas_with_states_and_set_thresholds(
             df=self.df,
-            column_from_island_areas=field_names.CENSUS_DECENNIAL_POVERTY_LESS_THAN_200_FPL_FIELD_2009,
+            column_from_island_areas=field_names.CENSUS_DECENNIAL_POVERTY_LESS_THAN_200_FPL_FIELD_2019,
             column_from_decennial_census=field_names.POVERTY_LESS_THAN_200_FPL_IMPUTED_FIELD,
             combined_column_name=field_names.COMBINED_POVERTY_LESS_THAN_200_FPL_FIELD_2010,
             threshold_cutoff_for_island_areas=self.LOW_INCOME_THRESHOLD,

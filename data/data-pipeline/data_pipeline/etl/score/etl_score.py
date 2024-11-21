@@ -166,7 +166,7 @@ class ScoreETL(ExtractTransformLoad):
         census_decennial_csv = (
             constants.DATA_PATH
             / "dataset"
-            / "census_decennial_2010"
+            / "census_decennial_2020"
             / "usa.csv"
         )
         self.census_decennial_df = pd.read_csv(
@@ -470,13 +470,13 @@ class ScoreETL(ExtractTransformLoad):
             field_names.EXPECTED_BUILDING_LOSS_RATE_FIELD,
             field_names.EXPECTED_AGRICULTURE_LOSS_RATE_FIELD,
             field_names.EXPECTED_POPULATION_LOSS_RATE_FIELD,
-            field_names.CENSUS_DECENNIAL_HIGH_SCHOOL_ED_FIELD_2009,
-            field_names.CENSUS_DECENNIAL_POVERTY_LESS_THAN_100_FPL_FIELD_2009,
-            field_names.CENSUS_DECENNIAL_POVERTY_LESS_THAN_200_FPL_FIELD_2009,
-            field_names.CENSUS_DECENNIAL_UNEMPLOYMENT_FIELD_2009,
+            field_names.CENSUS_DECENNIAL_HIGH_SCHOOL_ED_FIELD_2019,
+            field_names.CENSUS_DECENNIAL_POVERTY_LESS_THAN_100_FPL_FIELD_2019,
+            field_names.CENSUS_DECENNIAL_POVERTY_LESS_THAN_200_FPL_FIELD_2019,
+            field_names.CENSUS_DECENNIAL_UNEMPLOYMENT_FIELD_2019,
             field_names.CENSUS_UNEMPLOYMENT_FIELD_2010,
             field_names.CENSUS_POVERTY_LESS_THAN_100_FPL_FIELD_2010,
-            field_names.CENSUS_DECENNIAL_TOTAL_POPULATION_FIELD_2009,
+            field_names.CENSUS_DECENNIAL_TOTAL_POPULATION_FIELD_2019,
             field_names.UST_FIELD,
             field_names.DOT_TRAVEL_BURDEN_FIELD,
             field_names.FUTURE_FLOOD_RISK_FIELD,
@@ -542,8 +542,8 @@ class ScoreETL(ExtractTransformLoad):
                 low_field_name=field_names.LOW_LIFE_EXPECTANCY_FIELD,
             ),
             ReversePercentile(
-                field_name=field_names.CENSUS_DECENNIAL_AREA_MEDIAN_INCOME_PERCENT_FIELD_2009,
-                low_field_name=field_names.LOW_CENSUS_DECENNIAL_AREA_MEDIAN_INCOME_PERCENT_FIELD_2009,
+                field_name=field_names.CENSUS_DECENNIAL_AREA_MEDIAN_INCOME_PERCENT_FIELD_2019,
+                low_field_name=field_names.LOW_CENSUS_DECENNIAL_AREA_MEDIAN_INCOME_PERCENT_FIELD_2019,
             ),
         ]
 
@@ -658,7 +658,7 @@ class ScoreETL(ExtractTransformLoad):
         df_copy[field_names.COMBINED_CENSUS_TOTAL_POPULATION_2010] = df_copy[
             [
                 field_names.TOTAL_POP_FIELD,
-                field_names.CENSUS_DECENNIAL_TOTAL_POPULATION_FIELD_2009,
+                field_names.CENSUS_DECENNIAL_TOTAL_POPULATION_FIELD_2019,
             ]
         ].mean(axis=1, skipna=True)
 
