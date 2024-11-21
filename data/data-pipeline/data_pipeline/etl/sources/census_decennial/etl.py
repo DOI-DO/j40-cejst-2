@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import pandas as pd
+import geopandas as gpd
 import json
 from typing import List
 from pathlib import Path
@@ -14,6 +15,10 @@ from data_pipeline.etl.datasource import DataSource
 from data_pipeline.etl.datasource import FileDataSource
 from data_pipeline.score import field_names
 from data_pipeline.utils import get_module_logger
+from data_pipeline.etl.sources.census_acs.etl import CensusACSETL
+from data_pipeline.etl.sources.census_acs.etl_imputations import (
+    calculate_income_measures,
+)
 
 pd.options.mode.chained_assignment = "raise"
 
@@ -26,6 +31,9 @@ class CensusDecennialETL(ExtractTransformLoad):
         ExtractTransformLoad.DATA_PATH
         / "dataset"
         / f"census_decennial_{DECENNIAL_YEAR}"
+    )
+    CENSUS_GEOJSON_PATH = (
+        ExtractTransformLoad.DATA_PATH / "census" / "geojson" / "us.json"
     )
 
     def __get_api_url(
@@ -136,7 +144,73 @@ class CensusDecennialETL(ExtractTransformLoad):
             field_names.GEOID_TRACT_FIELD,
         ] = "69120950200"
 
-    def transform(self) -> None:
+    def _impute_income(self, geojson_path: Path):
+        """Impute income for both income measures."""
+        # Merges Census geojson to imput values from.
+        logger.debug(f"Reading GeoJSON from {geojson_path}")
+        geo_df = gpd.read_file(geojson_path)
+        self.df_all = CensusACSETL.merge_geojson(
+            df=self.df_all,
+            usa_geo_df=geo_df,
+        )
+
+        logger.debug("Imputing income information")
+        impute_var_named_tup_list = [
+            CensusACSETL.ImputeVariables(
+                raw_field_name=field_names.CENSUS_DECENNIAL_POVERTY_LESS_THAN_200_FPL_FIELD_2019,
+                imputed_field_name=DEC_FIELD_NAMES.IMPUTED_PERCENTAGE_HOUSEHOLDS_BELOW_200_PERC_POVERTY_LEVEL,
+            ),
+        ]
+        self.df_all = calculate_income_measures(
+            impute_var_named_tup_list=impute_var_named_tup_list,
+            geo_df=self.df_all,
+            geoid_field=self.GEOID_TRACT_FIELD_NAME,
+            population_field=field_names.CENSUS_DECENNIAL_TOTAL_POPULATION_FIELD_2019,
+        )
+
+        logger.debug("Calculating with imputed values")
+        self.df_all[
+            field_names.CENSUS_DECENNIAL_ADJUSTED_POVERTY_LESS_THAN_200_FPL_FIELD_2019
+        ] = (
+            self.df_all[
+                field_names.CENSUS_DECENNIAL_POVERTY_LESS_THAN_200_FPL_FIELD_2019
+            ].fillna(
+                self.df_all[
+                    DEC_FIELD_NAMES.IMPUTED_PERCENTAGE_HOUSEHOLDS_BELOW_200_PERC_POVERTY_LEVEL
+                ]
+            )
+            # Use clip to ensure that the values are not negative
+        ).clip(
+            lower=0
+        )
+
+        # All values should have a value at this point for tracts with >0 population
+        assert (
+            self.df_all[
+                self.df_all[
+                    field_names.CENSUS_DECENNIAL_TOTAL_POPULATION_FIELD_2019
+                ]
+                >= 1
+            ][
+                field_names.CENSUS_DECENNIAL_ADJUSTED_POVERTY_LESS_THAN_200_FPL_FIELD_2019
+            ]
+            .isna()
+            .sum()
+            == 0
+        ), "Error: not all values were filled with imputations..."
+
+        # We generate a boolean that is TRUE when there is an imputed income but not a baseline income, and FALSE otherwise.
+        # This allows us to see which tracts have an imputed income.
+        self.df_all[field_names.ISLAND_AREAS_IMPUTED_INCOME_FLAG_FIELD] = (
+            self.df_all[
+                field_names.CENSUS_DECENNIAL_ADJUSTED_POVERTY_LESS_THAN_200_FPL_FIELD_2019
+            ].notna()
+            & self.df_all[
+                field_names.CENSUS_DECENNIAL_POVERTY_LESS_THAN_200_FPL_FIELD_2019
+            ].isna()
+        )
+
+    def transform(self, geojson_path: Path = CENSUS_GEOJSON_PATH) -> None:
         # Creating Geo ID (Census Block Group) Field Name
         self.df_all[field_names.GEOID_TRACT_FIELD] = (
             self.df_all["state"] + self.df_all["county"] + self.df_all["tract"]
@@ -232,6 +306,8 @@ class CensusDecennialETL(ExtractTransformLoad):
                 f"There are {missing_value_count} missing values in the field {col} out of a total of {self.df_all.shape[0]} rows"
             )
 
+        self._impute_income(geojson_path)
+
     def load(self) -> None:
         self.OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
         columns_to_include = [
@@ -242,11 +318,14 @@ class CensusDecennialETL(ExtractTransformLoad):
             field_names.CENSUS_DECENNIAL_AREA_MEDIAN_INCOME_PERCENT_FIELD_2019,
             field_names.CENSUS_DECENNIAL_POVERTY_LESS_THAN_100_FPL_FIELD_2019,
             field_names.CENSUS_DECENNIAL_POVERTY_LESS_THAN_200_FPL_FIELD_2019,
+            DEC_FIELD_NAMES.IMPUTED_PERCENTAGE_HOUSEHOLDS_BELOW_200_PERC_POVERTY_LEVEL,
+            field_names.CENSUS_DECENNIAL_ADJUSTED_POVERTY_LESS_THAN_200_FPL_FIELD_2019,
             field_names.CENSUS_DECENNIAL_UNEMPLOYMENT_FIELD_2019,
             field_names.CENSUS_DECENNIAL_HIGH_SCHOOL_ED_FIELD_2019,
             DEC_FIELD_NAMES.COLLEGE_ATTENDANCE_PERCENT,
             DEC_FIELD_NAMES.COLLEGE_NON_ATTENDANCE,
             DEC_FIELD_NAMES.COLLEGE_ATTENDANCE_POPULATION,
+            field_names.ISLAND_AREAS_IMPUTED_INCOME_FLAG_FIELD,
         ] + self.final_race_fields
         self.df_all[columns_to_include].to_csv(
             path_or_buf=self.OUTPUT_PATH / "usa.csv", index=False

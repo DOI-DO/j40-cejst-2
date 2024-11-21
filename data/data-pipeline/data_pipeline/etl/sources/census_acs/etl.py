@@ -25,6 +25,9 @@ class CensusACSETL(ExtractTransformLoad):
     NAME = "census_acs"
     ACS_YEAR = 2019
     MINIMUM_POPULATION_REQUIRED_FOR_IMPUTATION = 1
+    ImputeVariables = namedtuple(
+        "ImputeVariables", ["raw_field_name", "imputed_field_name"]
+    )
 
     def __init__(self):
 
@@ -284,7 +287,7 @@ class CensusACSETL(ExtractTransformLoad):
 
         self.COLUMNS_TO_KEEP = (
             [
-                self.GEOID_TRACT_FIELD_NAME,
+                field_names.GEOID_TRACT_FIELD,
                 field_names.TOTAL_POP_FIELD,
                 self.UNEMPLOYED_FIELD_NAME,
                 self.LINGUISTIC_ISOLATION_FIELD_NAME,
@@ -335,15 +338,15 @@ class CensusACSETL(ExtractTransformLoad):
                 destination=self.census_acs_source,
                 acs_year=self.ACS_YEAR,
                 variables=variables,
-                tract_output_field_name=self.GEOID_TRACT_FIELD_NAME,
+                tract_output_field_name=field_names.GEOID_TRACT_FIELD,
                 data_path_for_fips_codes=self.DATA_PATH,
                 acs_type="acs5",
             )
         ]
 
     # pylint: disable=too-many-arguments
-    def _merge_geojson(
-        self,
+    @staticmethod
+    def merge_geojson(
         df: pd.DataFrame,
         usa_geo_df: gpd.GeoDataFrame,
         geoid_field: str = "GEOID10",
@@ -364,7 +367,7 @@ class CensusACSETL(ExtractTransformLoad):
                         county_code_field,
                     ]
                 ],
-                left_on=[self.GEOID_TRACT_FIELD_NAME],
+                left_on=[field_names.GEOID_TRACT_FIELD],
                 right_on=[geoid_field],
             )
         )
@@ -377,7 +380,7 @@ class CensusACSETL(ExtractTransformLoad):
 
         self.df = pd.read_csv(
             self.census_acs_source,
-            dtype={self.GEOID_TRACT_FIELD_NAME: "string"},
+            dtype={field_names.GEOID_TRACT_FIELD: "string"},
         )
 
     def transform(self) -> None:
@@ -401,7 +404,7 @@ class CensusACSETL(ExtractTransformLoad):
             self.DATA_PATH / "census" / "geojson" / "us.json",
         )
 
-        df = self._merge_geojson(
+        df = CensusACSETL.merge_geojson(
             df=df,
             usa_geo_df=geo_df,
         )
@@ -608,23 +611,19 @@ class CensusACSETL(ExtractTransformLoad):
         # we impute income for both income measures
         ## TODO: Convert to pydantic for clarity
         logger.debug("Imputing income information")
-        ImputeVariables = namedtuple(
-            "ImputeVariables", ["raw_field_name", "imputed_field_name"]
-        )
-
         df = calculate_income_measures(
             impute_var_named_tup_list=[
-                ImputeVariables(
+                CensusACSETL.ImputeVariables(
                     raw_field_name=self.POVERTY_LESS_THAN_200_PERCENT_FPL_FIELD_NAME,
                     imputed_field_name=self.IMPUTED_POVERTY_LESS_THAN_200_PERCENT_FPL_FIELD_NAME,
                 ),
-                ImputeVariables(
+                CensusACSETL.ImputeVariables(
                     raw_field_name=self.COLLEGE_ATTENDANCE_FIELD,
                     imputed_field_name=self.IMPUTED_COLLEGE_ATTENDANCE_FIELD,
                 ),
             ],
             geo_df=df,
-            geoid_field=self.GEOID_TRACT_FIELD_NAME,
+            geoid_field=field_names.GEOID_TRACT_FIELD,
             minimum_population_required_for_imputation=self.MINIMUM_POPULATION_REQUIRED_FOR_IMPUTATION,
         )
 

@@ -1,4 +1,4 @@
-GEOID10_TRACT,Percentage households below 200% of federal poverty line in 2009,"Percent of individuals below 200% Federal Poverty Line, imputed and adjusted","Percent of individuals below 200% Federal Poverty Line, imputed and adjusted (percentile)",Is low income (imputed and adjusted)?
+GEOID10_TRACT,"Percentage households below 200% of federal poverty line in 2009, adjusted and imputed","Percent of individuals below 200% Federal Poverty Line, imputed and adjusted","Percent of individuals below 200% Federal Poverty Line, imputed and adjusted (percentile)",Is low income (imputed and adjusted)?
 01071950300,,0.1,0.1,False
 36087011302,,0.7,0.7,False
 72119130701,,0.5,0.5,False

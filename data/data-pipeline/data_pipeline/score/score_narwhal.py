@@ -1044,7 +1044,7 @@ class ScoreNarwhal(Score):
             island_areas_poverty_200_criteria_field_name,
         ) = self._combine_island_areas_with_states_and_set_thresholds(
             df=self.df,
-            column_from_island_areas=field_names.CENSUS_DECENNIAL_POVERTY_LESS_THAN_200_FPL_FIELD_2019,
+            column_from_island_areas=field_names.CENSUS_DECENNIAL_ADJUSTED_POVERTY_LESS_THAN_200_FPL_FIELD_2019,
             column_from_decennial_census=field_names.POVERTY_LESS_THAN_200_FPL_IMPUTED_FIELD,
             combined_column_name=field_names.COMBINED_POVERTY_LESS_THAN_200_FPL_FIELD_2010,
             threshold_cutoff_for_island_areas=self.LOW_INCOME_THRESHOLD,

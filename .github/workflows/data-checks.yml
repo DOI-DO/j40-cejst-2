@@ -2,9 +2,6 @@
 name: Data Checks
 on:
   pull_request:
-    branches:
-      - main
-      - "**/release/**"
     paths:
       - "data/**"
 jobs:

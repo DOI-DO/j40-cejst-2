@@ -1,4 +1,5 @@
 from enum import Enum
+from types import MappingProxyType
 from data_pipeline.score import field_names
 
 
@@ -29,6 +30,7 @@ class DEC_FIELD_NAMES(str, Enum):
     HOUSEHOLD_POVERTY_LEVEL_OVER_2_0 = (
         "Household poverty level Over 2.0 IN 2019"
     )
+    IMPUTED_PERCENTAGE_HOUSEHOLDS_BELOW_200_PERC_POVERTY_LEVEL = f"{field_names.CENSUS_DECENNIAL_POVERTY_LESS_THAN_200_FPL_FIELD_2019}, imputed"
     TOTAL_HOUSEHOLD_POVERTY_LEVEL = "Total Household poverty level IN 2019"
     TERRITORY_MEDIAN_INCOME = "Territory Median Income"
     EMPLOYMENT_MALE_UNEMPLOYED = "Total males not in labor force"
@@ -44,6 +46,9 @@ class DEC_FIELD_NAMES(str, Enum):
     )
     COLLEGE_ATTENDANCE_PERCENT = (
         "Percent enrollment in college, graduate or professional school"
+    )
+    IMPUTED_COLLEGE_ATTENDANCE_PERCENT = (
+        f"{COLLEGE_ATTENDANCE_PERCENT}, imputed"
     )
     COLLEGE_NON_ATTENDANCE_PERCENT = "Percent of population not currently enrolled in college, graduate or professional school"
 
@@ -146,45 +151,61 @@ OUTPUT_RACE_FIELDS = [
 """Race fields to output in the results."""
 
 DEC_TERRITORY_PARAMS = [
-    {
-        "state_abbreviation": "as",
-        "fips": "60",
-        # https://www2.census.gov/geo/docs/reference/codes2020/cou/st60_as_cou2020.txt
-        "county_fips": ["010", "020", "030", "040", "050"],
-        "xwalk": __FIELD_NAME_COMMON_XWALK | __FIELD_NAME_AS_XWALK,
-        # Note: we hardcode the median income for each territory in this dict,
-        # because that data is hard to programmatically access.
-        # https://www.ruralhealthinfo.org/states/american-samoa
-        "median_income": 26352,
-    },
-    {
-        "state_abbreviation": "gu",
-        "fips": "66",
-        # https://www2.census.gov/geo/docs/reference/codes2020/cou/st66_gu_cou2020.txt
-        "county_fips": ["010"],
-        "xwalk": __FIELD_NAME_COMMON_XWALK | __FIELD_NAME_GU_XWALK,
-        # https://www.ruralhealthinfo.org/states/guam
-        # https://data.census.gov/table/DECENNIALDPGU2020.DP3?g=040XX00US66&d=DECIA%20Guam%20Demographic%20Profile
-        "median_income": 58289,
-    },
-    {
-        "state_abbreviation": "mp",
-        "fips": "69",
-        # https://www2.census.gov/geo/docs/reference/codes2020/cou/st69_mp_cou2020.txt
-        "county_fips": ["085", "100", "110", "120"],
-        "xwalk": __FIELD_NAME_COMMON_XWALK | __FIELD_NAME_MP_XWALK,
-        # https://www.ruralhealthinfo.org/states/northern-mariana
-        # https://data.census.gov/table/DECENNIALDPMP2020.DP3?d=DECIA%20Commonwealth%20of%20the%20Northern%20Mariana%20Islands%20Demographic%20Profile
-        "median_income": 31362,
-    },
-    {
-        "state_abbreviation": "vi",
-        "fips": "78",
-        # https://www2.census.gov/geo/docs/reference/codes2020/cou/st78_vi_cou2020.txt
-        "county_fips": ["010", "020", "030"],
-        "xwalk": __FIELD_NAME_COMMON_XWALK | __FIELD_NAME_VI_XWALK,
-        # https://www.ruralhealthinfo.org/states/us-virgin-islands
-        "median_income": 40408,
-    },
+    MappingProxyType(
+        {
+            "state_abbreviation": "as",
+            "fips": "60",
+            # https://www2.census.gov/geo/docs/reference/codes2020/cou/st60_as_cou2020.txt
+            "county_fips": ("010", "020", "030", "040", "050"),
+            "xwalk": MappingProxyType(
+                __FIELD_NAME_COMMON_XWALK | __FIELD_NAME_AS_XWALK
+            ),
+            # Note: we hardcode the median income for each territory in this dict,
+            # because that data is hard to programmatically access.
+            # https://www.ruralhealthinfo.org/states/american-samoa
+            "median_income": 26352,
+        }
+    ),
+    MappingProxyType(
+        {
+            "state_abbreviation": "gu",
+            "fips": "66",
+            # https://www2.census.gov/geo/docs/reference/codes2020/cou/st66_gu_cou2020.txt
+            "county_fips": ("010",),
+            "xwalk": MappingProxyType(
+                __FIELD_NAME_COMMON_XWALK | __FIELD_NAME_GU_XWALK
+            ),
+            # https://www.ruralhealthinfo.org/states/guam
+            # https://data.census.gov/table/DECENNIALDPGU2020.DP3?g=040XX00US66&d=DECIA%20Guam%20Demographic%20Profile
+            "median_income": 58289,
+        }
+    ),
+    MappingProxyType(
+        {
+            "state_abbreviation": "mp",
+            "fips": "69",
+            # https://www2.census.gov/geo/docs/reference/codes2020/cou/st69_mp_cou2020.txt
+            "county_fips": ("085", "100", "110", "120"),
+            "xwalk": MappingProxyType(
+                __FIELD_NAME_COMMON_XWALK | __FIELD_NAME_MP_XWALK
+            ),
+            # https://www.ruralhealthinfo.org/states/northern-mariana
+            # https://data.census.gov/table/DECENNIALDPMP2020.DP3?d=DECIA%20Commonwealth%20of%20the%20Northern%20Mariana%20Islands%20Demographic%20Profile
+            "median_income": 31362,
+        }
+    ),
+    MappingProxyType(
+        {
+            "state_abbreviation": "vi",
+            "fips": "78",
+            # https://www2.census.gov/geo/docs/reference/codes2020/cou/st78_vi_cou2020.txt
+            "county_fips": ("010", "020", "030"),
+            "xwalk": MappingProxyType(
+                __FIELD_NAME_COMMON_XWALK | __FIELD_NAME_VI_XWALK
+            ),
+            # https://www.ruralhealthinfo.org/states/us-virgin-islands
+            "median_income": 40408,
+        }
+    ),
 ]
-"""List of territories to process."""
+"""Read-only list of territories to process."""
