@@ -1,0 +1,126 @@
+name: Deploy Backend Main
+on:
+  workflow_dispatch:
+    inputs:
+      score_version:
+        description: "Which version of the score are you generating?"
+        required: true
+        default: '2.0'
+        type: choice
+        options:
+        - beta
+        - 1.0
+        - 2.0
+        - test
+
+env:
+  CENSUS_API_KEY: ${{ secrets.CENSUS_API_KEY }}
+  J40_VERSION_LABEL_STRING: ${{ inputs.score_version }}
+
+jobs:
+  generate-score-tiles:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: data/data-pipeline
+    strategy:
+      matrix:
+        python-version: [3.10]
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v2
+      - name: Print variables to help debug
+        uses: hmarr/debug-action@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Load cached Poetry installation
+        id: cached-poetry-dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: env-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('.github/workflows/deploy_backend_main.yml') }}
+      - name: Install poetry
+        uses: snok/install-poetry@v1
+      - name: Print Poetry settings
+        run: poetry show -v
+      - name: Install dependencies
+        run: poetry add s4cmd && poetry install
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.DATA_DEV_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.DATA_DEV_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: Install GDAL/ogr2ogr
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install gdal-bin
+          ogrinfo --version
+      - name: Generate Score
+        run: |
+          poetry run python3 data_pipeline/application.py score-full-run
+      - name: Generate Score Post
+        run: |
+          poetry run python3 data_pipeline/application.py generate-score-post -s aws
+      - name: Confirm we generated the version of the score we think we did
+        if: ${{ env.J40_VERSION_LABEL_STRING == '1.0' || env.J40_VERSION_LABEL_STRING == 'test' }}
+        run: |
+          grep "Identified as disadvantaged due to tribal overlap" data_pipeline/data/score/downloadable/* > /dev/null
+      - name: Confirm we generated the version of the score we think we did
+        if: ${{ env.J40_VERSION_LABEL_STRING == '2.0' || env.J40_VERSION_LABEL_STRING == 'beta' }}
+        run: |
+          grep -v "Identified as disadvantaged due to tribal overlap" data_pipeline/data/score/downloadable/* > /dev/null
+      - name: Generate Score Geo
+        run: |
+          poetry run python3 data_pipeline/application.py geo-score
+      - name: Run smoketest for 1.0
+        if: ${{ env.J40_VERSION_LABEL_STRING == '1.0' || env.J40_VERSION_LABEL_STRING == 'test' }}
+        run: |
+          poetry run pytest data_pipeline/ -m smoketest
+      - name: Deploy Score to Geoplatform AWS
+        run: |
+          poetry run s4cmd put ./data_pipeline/data/score/csv/ s3://${{secrets.S3_DATA_BUCKET}}/data-versions/${{env.J40_VERSION_LABEL_STRING}}/data/score/csv --recursive --force
+          poetry run s4cmd put ./data_pipeline/files/ s3://${{secrets.S3_DATA_BUCKET}}/data-versions/${{env.J40_VERSION_LABEL_STRING}}/data/score/downloadable --recursive --force
+          poetry run s4cmd put ./data_pipeline/data/score/downloadable/ s3://${{secrets.S3_DATA_BUCKET}}/data-versions/${{env.J40_VERSION_LABEL_STRING}}/data/score/downloadable --recursive --force
+      - name: Confirm we generated the version of the score we think we did
+        if: ${{ env.J40_VERSION_LABEL_STRING == '1.0' || env.J40_VERSION_LABEL_STRING == 'test' }}
+        run: |
+          curl "${{secrets.DATA_URL}}/data-versions/1.0/data/score/downloadable/1.0-shapefile-codebook.zip" -s -f -I -o /dev/null && \
+          curl "${{secrets.DATA_URL}}/data-versions/1.0/data/score/downloadable/1.0-communities.xlsx" -s -f -I -o /dev/null && \
+          curl "${{secrets.DATA_URL}}/data-versions/1.0/data/score/downloadable/1.0-communities.csv" -s -f -I -o /dev/null && \
+          curl "${{secrets.DATA_URL}}/data-versions/1.0/data/score/downloadable/1.0-shapefile-codebook.zip" -s -f -I -o /dev/null && \
+          curl "${{secrets.DATA_URL}}/data-versions/1.0/data/score/downloadable/cejst-technical-support-document.pdf" -s -f -I -o /dev/null && \
+          curl "${{secrets.DATA_URL}}/data-versions/1.0/data/score/downloadable/draft-communities-list.pdf" -s -f -I -o /dev/null
+      - name: Confirm we generated the version of the score we think we did
+        if: ${{ env.J40_VERSION_LABEL_STRING == '2.0' || env.J40_VERSION_LABEL_STRING == 'beta' }}
+        run: |
+          curl "${{secrets.DATA_URL}}/data-versions/2.0/data/score/downloadable/2.0-data-documentation.zip" -s -f -I -o /dev/null && \
+          curl "${{secrets.DATA_URL}}/data-versions/2.0/data/score/downloadable/2.0-shapefile-codebook.zip" -s -f -I -o /dev/null
+      - name: Set timezone for tippecanoe
+        uses: szenius/set-timezone@v1.0
+        with:
+          timezoneLinux: "America/Los_Angeles"
+      - name: Get tippecanoe
+        run: |
+          sudo apt-get install -y software-properties-common libsqlite3-dev zlib1g-dev
+          sudo apt-add-repository -y ppa:git-core/ppa
+          sudo mkdir -p /tmp/tippecanoe-src
+          sudo git clone https://github.com/mapbox/tippecanoe.git /tmp/tippecanoe-src
+      - name: Make tippecanoe
+        working-directory: /tmp/tippecanoe-src
+        run: |
+          sudo /usr/bin/bash -c make
+          mkdir -p /usr/local/bin
+          cp tippecanoe /usr/local/bin/tippecanoe
+          tippecanoe -v
+      - name: Generate Tiles
+        run: |
+          poetry run python3 data_pipeline/application.py generate-map-tiles
+      - name: Deploy Map to Geoplatform AWS
+        run: |
+          poetry run s4cmd put ./data_pipeline/data/score/geojson/ s3://${{secrets.S3_DATA_BUCKET}}/data-versions/${{env.J40_VERSION_LABEL_STRING}}/data/score/geojson --recursive --force --num-threads=250
+          poetry run s4cmd put ./data_pipeline/data/score/shapefile/ s3://${{secrets.S3_DATA_BUCKET}}/data-versions/${{env.J40_VERSION_LABEL_STRING}}/data/score/shapefile --recursive --force
+          poetry run s4cmd put ./data_pipeline/data/score/tiles/ s3://${{secrets.S3_DATA_BUCKET}}/data-versions/${{env.J40_VERSION_LABEL_STRING}}/data/score/tiles --recursive --force --num-threads=250
