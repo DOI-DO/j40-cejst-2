@@ -1,9 +1,11 @@
 [flake8]
+# E266, to many leading '#' for block comment
+# W503, line break before binary operator
+# TODO: Uncomment and fix the issues here that we care about, see
+# https://github.com/usds/justice40-tool/issues/1123
 ignore =
-  E266,  # to many leading '#' for block comment
-  W503,  # line break before binary operator
-  # TODO: Uncomment and fix the issues here that we care about, see
-  # https://github.com/usds/justice40-tool/issues/1123
+  E266,
+  W503,
   PD002,
   PD003,
   PD004,
