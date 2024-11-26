@@ -2,6 +2,7 @@ import sys
 import click
 import difflib
 import pandas as pd
+from pathlib import Path
 
 from data_pipeline.etl.score import constants
 from data_pipeline.utils import get_module_logger, download_file_from_url
@@ -14,6 +15,22 @@ pd.set_option("display.max_colwidth", None)
 pd.set_option("display.max_rows", None)
 pd.set_option("display.width", 10000)
 pd.set_option("display.colheader_justify", "left")
+
+
+def _read_from_file(file_path: Path):
+    """Read a CSV file into a Dataframe."""
+    if not file_path.is_file():
+        logger.error(
+            f"- No score file exists at {file_path}. "
+            "Please generate the score and try again."
+        )
+        sys.exit(1)
+    return pd.read_csv(
+        file_path,
+        index_col="GEOID10_TRACT",
+        dtype={"GEOID10_TRACT": str},
+        low_memory=False,
+    ).sort_index()
 
 
 @click.group()
@@ -33,8 +50,22 @@ def cli():
     default="1.0",
     required=False,
     type=str,
+    help="Set the production score version to compare to",
 )
-def compare_score(compare_to_version: str):
+@click.option(
+    "-f",
+    "--compare_to_file",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="Compare to the specified score CSV file instead of downloading from production",
+)
+@click.option(
+    "-l",
+    "--local_score_file",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    default=constants.DATA_SCORE_CSV_FULL_FILE_PATH,
+    help="Compare to the specified score CSV file instead of downloading from production",
+)
+def compare_score(compare_to_version: str, compare_to_file: str, local_score_file: str):
     """Compares the score in the production environment to the locally generated score. The
     algorithm is pretty simple:
 
@@ -56,39 +87,25 @@ def compare_score(compare_to_version: str):
 
     log_title("Compare Score", "Compare production score to local score")
 
-    locally_generated_score_path = constants.DATA_SCORE_CSV_FULL_FILE_PATH
-    if not locally_generated_score_path.is_file():
-        logger.error(
-            f"- No score file exists at {locally_generated_score_path}. Please generate the score and try again."
+    if compare_to_file:
+        log_info(f"Comparing to file {compare_to_file}...")
+        production_score_path = compare_to_file
+    else:
+        # TODO: transition to downloader code when it's available
+        production_score_url = f"https://justice40-data.s3.amazonaws.com/data-versions/{compare_to_version}/data/score/csv/full/usa.csv"
+        production_score_path = WORKING_PATH / "usa.csv"
+
+        log_info(f"Fetching score version {compare_to_version} from AWS")
+        production_score_path.parent.mkdir(parents=True, exist_ok=True)
+        download_file_from_url(
+            file_url=production_score_url,
+            download_file_name=production_score_path,
         )
-        sys.exit(1)
 
-    # TODO: transition to downloader code when it's available
-    production_score_url = f"https://justice40-data.s3.amazonaws.com/data-versions/{compare_to_version}/data/score/csv/full/usa.csv"
-    production_score_path = (
-        WORKING_PATH / f"prod-score-csv-full-{compare_to_version}-usa.csv"
-    )
-
-    log_info(f"Fetching score version {compare_to_version} from AWS")
-    production_score_path.parent.mkdir(parents=True, exist_ok=True)
-    download_file_from_url(
-        file_url=production_score_url, download_file_name=production_score_path
-    )
-
-    log_info("Loading files into pandas for comparisons")
-
-    local_score_df = pd.read_csv(
-        locally_generated_score_path,
-        index_col="GEOID10_TRACT",
-        dtype={"GEOID10_TRACT": str},
-        low_memory=False,
-    ).sort_index()
-    production_score_df = pd.read_csv(
-        production_score_path,
-        index_col="GEOID10_TRACT",
-        dtype={"GEOID10_TRACT": str},
-        low_memory=False,
-    ).sort_index()
+    log_info(f"Loading local score from {local_score_file}")
+    local_score_df = _read_from_file(local_score_file)
+    log_info(f"Loading production score from {production_score_path}")
+    production_score_df = _read_from_file(production_score_path)
 
     # Because of variations in Python versions and machine-level calculations, some of
     # our numbers can be really close but not the same. That throws off our comparisons.
@@ -241,17 +258,16 @@ def compare_score(compare_to_version: str):
         summary += "* I compared all values across all census tracts."
         summary += f" There are {len(comparison_results_df.index):,} tracts with at least one difference."
         summary += " Please examine the logs or run the score comparison locally to view them all.\n"
+
         log_info(
             f"There are {len(comparison_results_df.index)} rows with any differences."
         )
-
-        log_info("Those differences are:")
-        log_info("\n" + str(comparison_results_df))
-
-        comparison_path = WORKING_PATH / "deltas.csv"
-        comparison_results_df.to_csv(path_or_buf=comparison_path)
-
-        log_info(f"Wrote comparison results to {comparison_path}")
+        if len(comparison_results_df.index) > 0:
+            log_info("Those differences are:")
+            log_info("\n" + str(comparison_results_df))
+            comparison_path = WORKING_PATH / "deltas.csv"
+            comparison_results_df.to_csv(path_or_buf=comparison_path)
+            log_info(f"Wrote comparison results to {comparison_path}")
 
     except ValueError as e:
         summary += "* I could not run a full comparison. This is likely because there are column or index (census tract) differences."
