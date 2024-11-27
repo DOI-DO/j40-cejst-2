@@ -50,7 +50,7 @@ jobs:
         run: poetry add s4cmd && poetry install
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.DATA_DEV_AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.DATA_DEV_AWS_SECRET_ACCESS_KEY }}
@@ -89,7 +89,7 @@ jobs:
           poetry run s4cmd put ./data_pipeline/data/score/csv/ s3://${{secrets.S3_DATA_BUCKET}}/data-versions/${{env.J40_VERSION_LABEL_STRING}}/data/score/csv --recursive --force
           poetry run s4cmd put ./data_pipeline/files/ s3://${{secrets.S3_DATA_BUCKET}}/data-versions/${{env.J40_VERSION_LABEL_STRING}}/data/score/downloadable --recursive --force
           poetry run s4cmd put ./data_pipeline/data/score/downloadable/ s3://${{secrets.S3_DATA_BUCKET}}/data-versions/${{env.J40_VERSION_LABEL_STRING}}/data/score/downloadable --recursive --force
-      - name: Confirm we generated the version of the score we think we did
+      - name: Deploy 1.0 score post
         if: ${{ env.J40_VERSION_LABEL_STRING == '1.0' || env.J40_VERSION_LABEL_STRING == 'test' }}
         run: |
           curl "${{secrets.DATA_URL}}/data-versions/1.0/data/score/downloadable/1.0-shapefile-codebook.zip" -s -f -I -o /dev/null && \
@@ -98,13 +98,13 @@ jobs:
           curl "${{secrets.DATA_URL}}/data-versions/1.0/data/score/downloadable/1.0-shapefile-codebook.zip" -s -f -I -o /dev/null && \
           curl "${{secrets.DATA_URL}}/data-versions/1.0/data/score/downloadable/cejst-technical-support-document.pdf" -s -f -I -o /dev/null && \
           curl "${{secrets.DATA_URL}}/data-versions/1.0/data/score/downloadable/draft-communities-list.pdf" -s -f -I -o /dev/null
-      - name: Confirm we generated the version of the score we think we did
+      - name: Deploy 2.0 score post
         if: ${{ env.J40_VERSION_LABEL_STRING == '2.0' || env.J40_VERSION_LABEL_STRING == 'beta' }}
         run: |
           curl "${{secrets.DATA_URL}}/data-versions/2.0/data/score/downloadable/2.0-data-documentation.zip" -s -f -I -o /dev/null && \
           curl "${{secrets.DATA_URL}}/data-versions/2.0/data/score/downloadable/2.0-shapefile-codebook.zip" -s -f -I -o /dev/null
       - name: Set timezone for tippecanoe
-        uses: szenius/set-timezone@v1.0
+        uses: szenius/set-timezone@v2.0
         with:
           timezoneLinux: "America/Los_Angeles"
       - name: Get tippecanoe
