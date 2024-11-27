@@ -39,7 +39,7 @@ exports[`simulate app starting up, no click on map should match the snapshot of 
           tabindex="0"
         />
         
-      , or locate yourself 
+      , or locate yourself
     
         <img
           alt="
@@ -75,7 +75,7 @@ exports[`simulate app starting up, no click on map should match the snapshot of 
           tabindex="0"
         />
         
-    . Census tracts are a small unit of geography. They generally have populations 
+    . Census tracts are a small unit of geography. They generally have populations
     
         <img
           alt="
@@ -92,7 +92,7 @@ exports[`simulate app starting up, no click on map should match the snapshot of 
         tabindex="0"
       >
         
-      Communities that are disadvantaged live in tracts that experience burdens. These tracts are highlighted 
+      Communities that are disadvantaged live in tracts that experience burdens. These tracts are highlighted
     
         <img
           alt="
@@ -136,7 +136,7 @@ exports[`simulate app starting up, no click on map should match the snapshot of 
           tabindex="0"
         />
         
-    , or cutoffs, are used to determine if communities in a tract are disadvantaged. Certain burdens use percentages 
+    , or cutoffs, are used to determine if communities in a tract are disadvantaged. Certain burdens use percentages
     
         <img
           alt="
