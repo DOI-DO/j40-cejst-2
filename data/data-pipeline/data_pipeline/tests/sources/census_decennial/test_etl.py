@@ -97,6 +97,7 @@ def test_load_data(extract_path_fixture: Path, territory_params_fixture):
     df = dec.df_all
     assert len(df) == 64
     assert len(df.columns) == 30
+    assert df.index.is_unique
 
     # Columns should not have any census variable names
     census_vars = list(DEC_TERRITORY_PARAMS[0]["xwalk"].keys()) + list(

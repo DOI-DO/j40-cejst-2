@@ -128,7 +128,7 @@ class CensusDecennialETL(ExtractTransformLoad):
                     > 0,
                     DEC_FIELD_NAMES.TERRITORY_MEDIAN_INCOME,
                 ] = territory["median_income"]
-                self.df_all = pd.concat([self.df_all, df])
+                self.df_all = pd.concat([self.df_all, df], ignore_index=True)
 
     def _merge_tracts_2010_compatibility(self):
         """Merges tract 69120950200 to match 2010 tracts"""
