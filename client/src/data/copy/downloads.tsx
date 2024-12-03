@@ -31,7 +31,7 @@ export const PAGE_INTRO = defineMessages({
 export const getDownloadFileUrl = (filePath:string | undefined, isBeta: boolean) => {
   return [
     process.env.GATSBY_CDN_TILES_BASE_URL,
-    (isBeta ? process.env.GATSBY_BETA_SCORE_PATH : process.env.GATSBY_1_0_SCORE_PATH),
+    (isBeta ? process.env.GATSBY_BETA_SCORE_PATH : process.env.GATSBY_2_0_SCORE_PATH),
     filePath,
   ].join('/');
 };
@@ -41,58 +41,58 @@ export const DOWNLOAD_FILES = {
   NARWAL: {
     COMMUNITIES_LIST_XLS: {
       SIZE: 35.6, // MB
-      URL: getDownloadFileUrl(process.env.GATSBY_FILE_DL_PATH_1_0_COMMUNITIES_LIST_XLS, false),
-      LAST_UPDATED: COMMON_COPY.METH_1_0_RELEASE_DATE,
+      URL: getDownloadFileUrl(process.env.GATSBY_FILE_DL_PATH_2_0_COMMUNITIES_LIST_XLS, false),
+      LAST_UPDATED: COMMON_COPY.METH_2_0_RELEASE_DATE,
     },
     COMMUNITIES_LIST_CSV: {
       SIZE: 42, // MB
-      URL: getDownloadFileUrl(process.env.GATSBY_FILE_DL_PATH_1_0_COMMUNITIES_LIST_CSV, false),
-      LAST_UPDATED: COMMON_COPY.METH_1_0_RELEASE_DATE,
+      URL: getDownloadFileUrl(process.env.GATSBY_FILE_DL_PATH_2_0_COMMUNITIES_LIST_CSV, false),
+      LAST_UPDATED: COMMON_COPY.METH_2_0_RELEASE_DATE,
     },
     SHAPE_FILE: {
       SIZE: 356.8, // MB
-      URL: getDownloadFileUrl(process.env.GATSBY_FILE_DL_PATH_1_0_SHAPE_FILE_ZIP, false),
-      LAST_UPDATED: COMMON_COPY.METH_1_0_RELEASE_DATE,
+      URL: getDownloadFileUrl(process.env.GATSBY_FILE_DL_PATH_2_0_SHAPE_FILE_ZIP, false),
+      LAST_UPDATED: COMMON_COPY.METH_2_0_RELEASE_DATE,
     },
     TSD: {
       SIZE: 4.4, // MB
-      URL: getDownloadFileUrl(process.env.GATSBY_FILE_DL_PATH_1_0_TSD_PDF, false),
-      LAST_UPDATED: COMMON_COPY.METH_1_0_RELEASE_DATE,
+      URL: getDownloadFileUrl(process.env.GATSBY_FILE_DL_PATH_2_0_TSD_PDF, false),
+      LAST_UPDATED: COMMON_COPY.METH_2_0_RELEASE_DATE,
     },
     TSD_ES: {
       SIZE: 4.8, // MB
       URL: getDownloadFileUrl(process.env.GATSBY_FILE_DL_PATH_TSD_ES_PDF, false),
-      LAST_UPDATED: COMMON_COPY.METH_1_0_RELEASE_DATE,
+      LAST_UPDATED: COMMON_COPY.METH_2_0_RELEASE_DATE,
     },
     HOW_TO_COMMUNITIES: {
       SIZE: 687.9, // KB
-      URL: getDownloadFileUrl(process.env.GATSBY_FILE_DL_PATH_1_0_COMMUNITIES_LIST_PDF, false),
-      LAST_UPDATED: COMMON_COPY.METH_1_0_RELEASE_DATE,
+      URL: getDownloadFileUrl(process.env.GATSBY_FILE_DL_PATH_2_0_COMMUNITIES_LIST_PDF, false),
+      LAST_UPDATED: COMMON_COPY.METH_2_0_RELEASE_DATE,
     },
     HOW_TO_COMMUNITIES_ES: {
       SIZE: 761.8, // KB
-      URL: getDownloadFileUrl(process.env.GATSBY_FILE_DL_PATH_1_0_COMMUNITIES_LIST_ES_PDF, false),
-      LAST_UPDATED: COMMON_COPY.METH_1_0_RELEASE_DATE,
+      URL: getDownloadFileUrl(process.env.GATSBY_FILE_DL_PATH_2_0_COMMUNITIES_LIST_ES_PDF, false),
+      LAST_UPDATED: COMMON_COPY.METH_2_0_RELEASE_DATE,
     },
     INSTRUCTIONS: {
       SIZE: 228.4, // KB // Todo: Update when actual file is uploaded
-      URL: getDownloadFileUrl(process.env.GATSBY_FILE_DL_PATH_1_0_INSTRUCT_PDF, false),
-      LAST_UPDATED: COMMON_COPY.METH_1_0_RELEASE_DATE,
+      URL: getDownloadFileUrl(process.env.GATSBY_FILE_DL_PATH_2_0_INSTRUCT_PDF, false),
+      LAST_UPDATED: COMMON_COPY.METH_2_0_RELEASE_DATE,
     },
     INSTRUCTIONS_ES: {
       SIZE: 173.6, // KB // Todo: Update when actual file is uploaded
-      URL: getDownloadFileUrl(process.env.GATSBY_FILE_DL_PATH_1_0_INSTRUCT_ES_PDF, false),
-      LAST_UPDATED: COMMON_COPY.METH_1_0_RELEASE_DATE,
+      URL: getDownloadFileUrl(process.env.GATSBY_FILE_DL_PATH_2_0_INSTRUCT_ES_PDF, false),
+      LAST_UPDATED: COMMON_COPY.METH_2_0_RELEASE_DATE,
     },
     COMP_CHART: {
       SIZE: 33.1, // KB
-      URL: getDownloadFileUrl(process.env.GATSBY_FILE_DL_PATH_1_0_TOOL_COMP_PDF, false),
-      LAST_UPDATED: COMMON_COPY.METH_1_0_RELEASE_DATE,
+      URL: getDownloadFileUrl(process.env.GATSBY_FILE_DL_PATH_2_0_TOOL_COMP_PDF, false),
+      LAST_UPDATED: COMMON_COPY.METH_2_0_RELEASE_DATE,
     },
     M_23_09_ES: {
       SIZE: 120.5, // KB
-      URL: getDownloadFileUrl(process.env.GATSBY_FILE_DL_PATH_1_0_M_23_09_SIGNED_PDF, false),
-      LAST_UPDATED: COMMON_COPY.METH_1_0_RELEASE_DATE,
+      URL: getDownloadFileUrl(process.env.GATSBY_FILE_DL_PATH_2_0_M_23_09_SIGNED_PDF, false),
+      LAST_UPDATED: COMMON_COPY.METH_2_0_RELEASE_DATE,
     },
   },
   BETA: {
@@ -138,7 +138,7 @@ export const getDownloadIconAltTag = () => defineMessages({
   },
 });
 
-export const RELEASE_1_0 = {
+export const RELEASE_2_0 = {
   UPDATE_1: <FormattedMessage
     id={'download.page.release.update.title.1'}
     defaultMessage={`Version {release} Release update - {date}`}
@@ -146,7 +146,7 @@ export const RELEASE_1_0 = {
     values={{
       release: VERSION_NUMBER,
       date: <FormattedDate
-        value={COMMON_COPY.METH_1_0_RELEASE_DATE}
+        value={COMMON_COPY.METH_2_0_RELEASE_DATE}
         year="numeric"
         month="short"
         day="numeric"

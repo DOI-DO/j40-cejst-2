@@ -490,7 +490,7 @@ exports[`rendering of the DatasetContainer checks if various text fields are vis
                     <a
                       class="usa-link usa-link--external"
                       data-cy=""
-                      href="https://static-data-screeningtool.geoplatform.gov/data-versions/1.0/data/score/downloadable/CEQ-CEJST-Instructions.pdf"
+                      href="undefined/data-versions/2.0/data/score/downloadable/CEQ-CEJST-Instructions.pdf"
                       rel="noreferrer"
                       target="_blank"
                     >
