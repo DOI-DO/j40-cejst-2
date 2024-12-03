@@ -10,6 +10,9 @@ GEOID_TRACT_FIELD = "GEOID10_TRACT"
 STATE_FIELD = "State/Territory"
 COUNTY_FIELD = "County Name"
 
+# Census per-tract land area field name
+LAND_AREA_FIELD = "ALAND10"
+
 # Definition Narwhal fields
 SCORE_N_COMMUNITIES = "Definition N (communities)"
 N_CLIMATE = "Climate Factor (Definition N)"
