@@ -380,3 +380,13 @@ export const CENSUS_TRACT_SURVEY_LINKS = {
   EN: "https://eop.gov1.qualtrics.com/jfe/form/SV_8J5wGa8Ya4dMP9c",
   ES: "https://eop.gov1.qualtrics.com/jfe/form/SV_eJXos5X4yekq6cC",
 };
+
+export const TILE_BASE_URL = process.env.DATA_SOURCE === "local" ?
+process.env.GATSBY_LOCAL_TILES_BASE_URL :
+process.env.GATSBY_CDN_TILES_BASE_URL;
+
+export const TILE_PATH = process.env.DATA_SOURCE === "local" ?
+process.env.GATSBY_DATA_PIPELINE_SCORE_PATH_LOCAL :
+process.env.GATSBY_1_0_SCORE_PATH;
+
+export const MAP_TRACT_SEARCH_PATH = "data_pipeline/data/score/search/tracts.json";

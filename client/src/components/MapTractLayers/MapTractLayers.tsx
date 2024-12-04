@@ -38,13 +38,8 @@ export const featureURLForTilesetName = (tilesetName: string): string => {
   } else {
     // The feature tile base URL and path can either point locally or the CDN.
     // This is selected based on the DATA_SOURCE env variable.
-    const featureTileBaseURL = process.env.DATA_SOURCE === 'local' ?
-        process.env.GATSBY_LOCAL_TILES_BASE_URL :
-        process.env.GATSBY_CDN_TILES_BASE_URL;
-
-    const featureTilePath = process.env.DATA_SOURCE === 'local' ?
-      process.env.GATSBY_DATA_PIPELINE_SCORE_PATH_LOCAL :
-      process.env.GATSBY_2_0_SCORE_PATH;
+    const featureTileBaseURL = constants.TILE_BASE_URL;
+    const featureTilePath = constants.TILE_PATH;
 
     return [
       featureTileBaseURL,

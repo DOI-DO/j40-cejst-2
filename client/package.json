@@ -85,6 +85,7 @@
     "gatsby-plugin-env-variables": "^2.2.0",
     "gatsby-plugin-robots-txt": "^1.7.0",
     "gatsby-plugin-sitemap": "^4.10.0",
+    "js-search": "^2.0.1",
     "mapbox-gl": "^1.13.2",
     "maplibre-gl": "^1.14.0",
     "query-string": "^7.1.3",

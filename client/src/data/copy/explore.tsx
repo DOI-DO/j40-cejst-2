@@ -92,7 +92,7 @@ export const MAP = defineMessages({
   },
   SEARCH_PLACEHOLDER: {
     id: 'explore.map.page.map.search.placeholder.text',
-    defaultMessage: 'Search for an address, city, state or ZIP',
+    defaultMessage: 'Search for an address, city, state, ZIP or Census Tract',
     description: 'On the explore the map page, on the map, the placeholder text for search',
   },
   SEARCH_PLACEHOLDER_MOBILE: {

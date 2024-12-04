@@ -5,9 +5,12 @@ from pathlib import Path
 
 import pandas.api.types as ptypes
 import pandas.testing as pdt
+import pandas as pd
+import geopandas as gpd
 from data_pipeline.content.schemas.download_schemas import CSVConfig
 from data_pipeline.etl.score import constants
 from data_pipeline.utils import load_yaml_dict_from_file
+from data_pipeline.etl.score.etl_score_post import PostScoreETL
 
 # See conftest.py for all fixtures used in these tests
 
@@ -150,3 +153,16 @@ def test_load_downloadable_zip(etl, monkeypatch, score_data_expected):
     assert constants.SCORE_DOWNLOADABLE_EXCEL_FILE_PATH.is_file()
     assert constants.SCORE_DOWNLOADABLE_CSV_ZIP_FILE_PATH.is_file()
     assert constants.SCORE_DOWNLOADABLE_XLS_ZIP_FILE_PATH.is_file()
+
+
+def test_create_tract_search_data(census_geojson_sample_data: gpd.GeoDataFrame):
+    # Sanity check
+    assert len(census_geojson_sample_data) > 0
+    
+    result = PostScoreETL()._create_tract_search_data(census_geojson_sample_data)
+    assert isinstance(result, pd.DataFrame)
+    assert not result.columns.empty
+    columns = ["GEOID10", "INTPTLAT10", "INTPTLON10"]
+    for col in columns:
+        assert col in result.columns
+    assert len(census_geojson_sample_data) == len(result)

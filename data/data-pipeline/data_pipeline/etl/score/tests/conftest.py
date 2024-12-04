@@ -3,6 +3,7 @@ from importlib import reload
 from pathlib import Path
 
 import pandas as pd
+import geopandas as gpd
 import pytest
 from data_pipeline import config
 from data_pipeline.etl.score import etl_score_post
@@ -144,3 +145,13 @@ def downloadable_data_expected():
     return pd.read_pickle(
         pytest.SNAPSHOT_DIR / "downloadable_data_expected.pkl"
     )
+
+
+@pytest.fixture()
+def census_geojson_sample_data(sample_data_dir) -> gpd.GeoDataFrame:
+    with open(
+        sample_data_dir / "census_60.geojson", "r", encoding="utf-8"
+    ) as file:
+        data = gpd.read_file(file)
+        return data
+    return None
