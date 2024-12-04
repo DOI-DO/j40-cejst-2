@@ -215,11 +215,14 @@ class ScoreETL(ExtractTransformLoad):
             dtype={self.GEOID_TRACT_FIELD_NAME: "string"},
             low_memory=False,
         )
-        self.v1_0_score_results_df.rename(
+        # Only keep the columns we need and rename them as they will clash
+        # with the new score DF.
+        self.v1_0_score_results_df = self.v1_0_score_results_df[
+            [field_names.GEOID_TRACT_FIELD, field_names.FINAL_SCORE_N_BOOLEAN]
+        ].rename(
             columns={
                 field_names.FINAL_SCORE_N_BOOLEAN: field_names.FINAL_SCORE_N_BOOLEAN_V1_0,
-            },
-            inplace=True,
+            }
         )
 
     def _join_tract_dfs(self, census_tract_dfs: list) -> pd.DataFrame:
