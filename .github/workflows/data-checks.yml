@@ -2,9 +2,6 @@
 name: Data Checks
 on:
   pull_request:
-    branches:
-      - main
-      - "**/release/**"
     paths:
       - "data/**"
 jobs:
@@ -16,7 +13,7 @@ jobs:
     strategy:
       matrix:
         # checks all of the versions allowed in pyproject.toml
-        python-version: [3.8, 3.9]
+        python-version: [3.10.15]
     steps:
       # installs Python
       # one execution of the tests per version listed above

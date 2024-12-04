@@ -1146,6 +1146,12 @@ const AreaDetail = ({properties}: IAreaDetailProps) => {
             isAdjacencyLowIncome={
               properties[constants.ADJACENCY_LOW_INCOME_EXCEEDS_THRESH]
             }
+            isIslandLowIncome={
+              properties[constants.IS_FEDERAL_POVERTY_LEVEL_200] &&
+              constants.TILES_ISLAND_AREA_FIPS_CODES.some((code) => {
+                return properties[constants.GEOID_PROPERTY].startsWith(code);
+              })
+            }
             tribalCountAK={
               properties[constants.TRIBAL_AREAS_COUNT_AK] >= 1 ?
                 properties[constants.TRIBAL_AREAS_COUNT_AK] :

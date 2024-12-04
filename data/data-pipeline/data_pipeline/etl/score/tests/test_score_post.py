@@ -5,9 +5,12 @@ from pathlib import Path
 
 import pandas.api.types as ptypes
 import pandas.testing as pdt
+import pandas as pd
+import geopandas as gpd
 from data_pipeline.content.schemas.download_schemas import CSVConfig
 from data_pipeline.etl.score import constants
 from data_pipeline.utils import load_yaml_dict_from_file
+from data_pipeline.etl.score.etl_score_post import PostScoreETL
 
 # See conftest.py for all fixtures used in these tests
 
@@ -80,11 +83,11 @@ def test_create_score_data(
     )
 
 
-def test_create_tile_data(etl, score_data_expected, tile_data_expected):
-    output_tiles_df_actual = etl._create_tile_data(score_data_expected)
+def test_create_tile_data(etl, create_tile_score_data_input, create_tile_data_expected):
+    output_tiles_df_actual = etl._create_tile_data(create_tile_score_data_input)
     pdt.assert_frame_equal(
         output_tiles_df_actual,
-        tile_data_expected,
+        create_tile_data_expected,
     )
 
 
@@ -150,3 +153,16 @@ def test_load_downloadable_zip(etl, monkeypatch, score_data_expected):
     assert constants.SCORE_DOWNLOADABLE_EXCEL_FILE_PATH.is_file()
     assert constants.SCORE_DOWNLOADABLE_CSV_ZIP_FILE_PATH.is_file()
     assert constants.SCORE_DOWNLOADABLE_XLS_ZIP_FILE_PATH.is_file()
+
+
+def test_create_tract_search_data(census_geojson_sample_data: gpd.GeoDataFrame):
+    # Sanity check
+    assert len(census_geojson_sample_data) > 0
+    
+    result = PostScoreETL()._create_tract_search_data(census_geojson_sample_data)
+    assert isinstance(result, pd.DataFrame)
+    assert not result.columns.empty
+    columns = ["GEOID10", "INTPTLAT10", "INTPTLON10"]
+    for col in columns:
+        assert col in result.columns
+    assert len(census_geojson_sample_data) == len(result)

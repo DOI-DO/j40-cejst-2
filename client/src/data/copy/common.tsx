@@ -28,7 +28,7 @@ export const linkFn = (to:string | IDefineMessage, isInternal:boolean, isOpenNew
 
 export const FEEDBACK_EMAIL = 'Screeningtool-Support@omb.eop.gov';
 
-export const METH_1_0_RELEASE_DATE = new Date(2022, 10, 22, 11, 59, 59); // Nov 22 2022
+export const METH_2_0_RELEASE_DATE = new Date(2022, 10, 22, 11, 59, 59); // Nov 22 2022
 export const METH_BETA_RELEASE_DATE = new Date(2022, 1, 18, 11, 59, 59); // Feb 18 2022
 
 
@@ -40,7 +40,7 @@ export const BETA_BANNER_CONTENT = <FormattedMessage
   values={{
     bold1: boldFn,
     relDate: <FormattedDate
-      value={METH_1_0_RELEASE_DATE}
+      value={METH_2_0_RELEASE_DATE}
       year="numeric"
       month="short"
       day="numeric"
@@ -75,7 +75,7 @@ export const ALERTS = {
     values={{
       link1: linkFn('https://www.whitehouse.gov/ceq/news-updates/2022/11/22/biden-harris-administration-launches-version-1-0-of-climate-and-economic-justice-screening-tool-key-step-in-implementing-president-bidens-justice40-initiative/', false, true),
       ver1RelDate: <FormattedDate
-        value={METH_1_0_RELEASE_DATE}
+        value={METH_2_0_RELEASE_DATE}
         year="numeric"
         month="numeric"
         day="numeric"

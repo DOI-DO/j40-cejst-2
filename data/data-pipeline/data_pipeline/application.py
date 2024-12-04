@@ -33,6 +33,31 @@ dataset_cli_help = "Grab the data from either 'local' for local access or 'aws' 
 
 LOG_LINE_WIDTH = 60
 
+use_cache_option = click.option(
+    "-u",
+    "--use-cache",
+    is_flag=True,
+    default=False,
+    help="Check if data source has been downloaded already, and if it has, use the cached version of the data source.",
+)
+
+dataset_option = click.option(
+    "-d",
+    "--dataset",
+    required=False,
+    type=str,
+    help=dataset_cli_help,
+)
+
+data_source_option = click.option(
+    "-s",
+    "--data-source",
+    default="local",
+    required=False,
+    type=str,
+    help=dataset_cli_help,
+)
+
 
 @click.group()
 def cli():
@@ -51,7 +76,6 @@ def census_cleanup():
     census_reset(data_path)
 
     log_goodbye()
-    sys.exit()
 
 
 @cli.command(help="Clean up all data folders")
@@ -70,7 +94,6 @@ def data_cleanup():
     geo_score_folder_cleanup()
 
     log_goodbye()
-    sys.exit()
 
 
 @cli.command(
@@ -82,13 +105,7 @@ def data_cleanup():
     is_flag=True,
     help="Upload to AWS S3 a zipped archive of the census data.",
 )
-@click.option(
-    "-u",
-    "--use-cache",
-    is_flag=True,
-    default=False,
-    help="Check if data source has been downloaded already, and if it has, use the cached version of the data source.",
-)
+@use_cache_option
 def census_data_download(zip_compress, use_cache):
     """CLI command to download all census shape files from the Census FTP and extract the geojson
     to generate national and by state Census Block Group CSVs"""
@@ -105,18 +122,10 @@ def census_data_download(zip_compress, use_cache):
         zip_census_data()
 
     log_goodbye()
-    sys.exit()
 
 
 @cli.command(help="Retrieve census data from source")
-@click.option(
-    "-s",
-    "--data-source",
-    default="local",
-    required=False,
-    type=str,
-    help=dataset_cli_help,
-)
+@data_source_option
 def pull_census_data(data_source: str):
 
     log_title("Pull Census Data")
@@ -126,26 +135,13 @@ def pull_census_data(data_source: str):
     check_census_data_source(data_path, data_source)
 
     log_goodbye()
-    sys.exit()
 
 
 @cli.command(
     help="Run all ETL processes or a specific one",
 )
-@click.option(
-    "-d",
-    "--dataset",
-    required=False,
-    type=str,
-    help=dataset_cli_help,
-)
-@click.option(
-    "-u",
-    "--use-cache",
-    is_flag=True,
-    default=False,
-    help="Check if data source has been downloaded already, and if it has, use the cached version of the data source.",
-)
+@dataset_option
+@use_cache_option
 def etl_run(dataset: str, use_cache: bool):
     """Run a specific or all ETL processes
 
@@ -161,7 +157,6 @@ def etl_run(dataset: str, use_cache: bool):
     etl_runner(dataset, use_cache)
 
     log_goodbye()
-    sys.exit()
 
 
 @cli.command(
@@ -178,19 +173,12 @@ def score_run():
     score_generate()
 
     log_goodbye()
-    sys.exit()
 
 
 @cli.command(
     help="Run ETL + Score Generation",
 )
-@click.option(
-    "-u",
-    "--use-cache",
-    is_flag=True,
-    default=False,
-    help="Check if data source has been downloaded already, and if it has, use the cached version of the data source.",
-)
+@use_cache_option
 def score_full_run(use_cache: bool):
     """CLI command to run ETL and generate the score in one command"""
     log_title("Score Full Run", "Run ETL and Generate Score (no tiles)")
@@ -207,20 +195,12 @@ def score_full_run(use_cache: bool):
     score_generate()
 
     log_goodbye()
-    sys.exit()
 
 
 @cli.command(
     help="Run etl_score_post to create score csv, tile csv, and downloadable zip"
 )
-@click.option(
-    "-s",
-    "--data-source",
-    default="local",
-    required=False,
-    type=str,
-    help=dataset_cli_help,
-)
+@data_source_option
 def generate_score_post(data_source: str):
     """CLI command to generate score, tile, and downloadable files
 
@@ -244,18 +224,10 @@ def generate_score_post(data_source: str):
     score_post(data_source)
 
     log_goodbye()
-    sys.exit()
 
 
 @cli.command(help="Generate GeoJSON files with scores baked in")
-@click.option(
-    "-s",
-    "--data-source",
-    default="local",
-    required=False,
-    type=str,
-    help=dataset_cli_help,
-)
+@data_source_option
 def geo_score(data_source: str):
     """CLI command to combine score with GeoJSON data and generate low and high files
 
@@ -280,7 +252,6 @@ def geo_score(data_source: str):
     score_geo(data_source=data_source)
 
     log_goodbye()
-    sys.exit()
 
 
 @cli.command(
@@ -304,7 +275,6 @@ def generate_map_tiles(generate_tribal_layer):
     generate_tiles(data_path, generate_tribal_layer)
 
     log_goodbye()
-    sys.exit()
 
 
 @cli.command(
@@ -316,21 +286,8 @@ def generate_map_tiles(generate_tribal_layer):
     is_flag=True,
     help="Check if data run has been run before, and don't run it if so.",
 )
-@click.option(
-    "-s",
-    "--data-source",
-    default="local",
-    required=False,
-    type=str,
-    help=dataset_cli_help,
-)
-@click.option(
-    "-u",
-    "--use-cache",
-    is_flag=True,
-    default=False,
-    help="Check if data source has been downloaded already, and if it has, use the cached version of the data source.",
-)
+@data_source_option
+@use_cache_option
 def data_full_run(check: bool, data_source: str, use_cache: bool):
     """CLI command to run ETL, score, JSON combine and generate tiles in one command
 
@@ -388,19 +345,12 @@ def data_full_run(check: bool, data_source: str, use_cache: bool):
     call(cmd, shell=True)
 
     log_goodbye()
-    sys.exit()
 
 
 @cli.command(
     help="Print data sources for all ETL processes (or a specific one)",
 )
-@click.option(
-    "-d",
-    "--dataset",
-    required=False,
-    type=str,
-    help=dataset_cli_help,
-)
+@dataset_option
 def print_data_sources(dataset: str):
     """Print data sources for all ETL processes (or a specific one)
 
@@ -421,26 +371,13 @@ def print_data_sources(dataset: str):
         log_info(s)
 
     log_goodbye()
-    sys.exit()
 
 
 @cli.command(
     help="Fetch data sources for all ETL processes (or a specific one)",
 )
-@click.option(
-    "-d",
-    "--dataset",
-    required=False,
-    type=str,
-    help=dataset_cli_help,
-)
-@click.option(
-    "-u",
-    "--use-cache",
-    is_flag=True,
-    default=False,
-    help="Check if data source has been downloaded already, and if it has, use the cached version of the data source.",
-)
+@dataset_option
+@use_cache_option
 def extract_data_sources(dataset: str, use_cache: bool):
     """Extract and cache data source(s) for all ETL processes (or a specific one)
 
@@ -457,19 +394,12 @@ def extract_data_sources(dataset: str, use_cache: bool):
     extract_ds(dataset, use_cache)
 
     log_goodbye()
-    sys.exit()
 
 
 @cli.command(
     help="Clear data source cache for all ETL processes (or a specific one)",
 )
-@click.option(
-    "-d",
-    "--dataset",
-    required=False,
-    type=str,
-    help=dataset_cli_help,
-)
+@dataset_option
 def clear_data_source_cache(dataset: str):
     """Clear data source(s) cache for all ETL processes (or a specific one)
 
@@ -485,7 +415,33 @@ def clear_data_source_cache(dataset: str):
     clear_ds_cache(dataset)
 
     log_goodbye()
-    sys.exit()
+
+
+@cli.command(
+    help="Generate scoring and tiles",
+)
+@click.pass_context
+def full_post_etl(ctx):
+    """Generate scoring and tiles"""
+    ctx.invoke(score_run)
+    ctx.invoke(generate_score_post, data_source=None)
+    ctx.invoke(geo_score, data_source=None)
+    ctx.invoke(generate_map_tiles, generate_tribal_layer=False)
+
+
+@cli.command(
+    help="Run all downloads, extracts, and generate scores and tiles",
+)
+@use_cache_option
+@click.pass_context
+def full_run(ctx, use_cache):
+    """Run all downloads, ETLs, and generate scores and tiles"""
+    if not use_cache:
+        ctx.invoke(data_cleanup)
+    ctx.invoke(census_data_download, zip_compress=False, use_cache=use_cache)
+    ctx.invoke(extract_data_sources, dataset=None, use_cache=use_cache)
+    ctx.invoke(etl_run, dataset=None, use_cache=use_cache)
+    ctx.invoke(full_post_etl)
 
 
 def log_title(title: str, subtitle: str = None):

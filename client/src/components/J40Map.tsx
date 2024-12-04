@@ -130,7 +130,7 @@ const J40Map = ({location}: IJ40Interface) => {
   const onClick = (event: MapEvent | React.MouseEvent<HTMLButtonElement>) => {
     // Stop all propagation / bubbling / capturing
     event.preventDefault();
-    event.stopPropagation();
+    (event as React.MouseEvent<HTMLButtonElement>).stopPropagation?.();
 
     // Check if the click is for territories. Given the territories component's design, it can be
     // guaranteed that each territory control will have an id. We use this ID to determine
@@ -167,8 +167,9 @@ const J40Map = ({location}: IJ40Interface) => {
         default:
           break;
       }
-    } else {
-      // This else clause will fire when the ID is null or empty. This is the case where the map is clicked
+    } else if (event.target && (event.target as HTMLElement).nodeName == 'DIV' ) {
+      // This else clause will fire when the user clicks on the map and will ignore other controls
+      // such as the search box and buttons.
 
       // @ts-ignore
       const feature = event.features && event.features[0];

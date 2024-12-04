@@ -1,14 +1,24 @@
-import json
-from typing import List
 import os
-
 import numpy as np
 import pandas as pd
+import geopandas as gpd
+import json
+from typing import List
+from pathlib import Path
+from data_pipeline.etl.sources.census_decennial.constants import (
+    DEC_TERRITORY_PARAMS,
+    DEC_FIELD_NAMES,
+    OUTPUT_RACE_FIELDS,
+)
 from data_pipeline.etl.base import ExtractTransformLoad
-from data_pipeline.score import field_names
-from data_pipeline.utils import get_module_logger
 from data_pipeline.etl.datasource import DataSource
 from data_pipeline.etl.datasource import FileDataSource
+from data_pipeline.score import field_names
+from data_pipeline.utils import get_module_logger
+from data_pipeline.etl.sources.census_acs.etl import CensusACSETL
+from data_pipeline.etl.sources.census_acs.etl_imputations import (
+    calculate_income_measures,
+)
 
 pd.options.mode.chained_assignment = "raise"
 
@@ -16,514 +26,278 @@ logger = get_module_logger(__name__)
 
 
 class CensusDecennialETL(ExtractTransformLoad):
-    def __init__(self):
-        self.DECENNIAL_YEAR = 2010
-        self.OUTPUT_PATH = (
-            self.DATA_PATH
-            / "dataset"
-            / f"census_decennial_{self.DECENNIAL_YEAR}"
-        )
+    DECENNIAL_YEAR = 2020
+    OUTPUT_PATH = (
+        ExtractTransformLoad.DATA_PATH
+        / "dataset"
+        / f"census_decennial_{DECENNIAL_YEAR}"
+    )
+    CENSUS_GEOJSON_PATH = (
+        ExtractTransformLoad.DATA_PATH / "census" / "geojson" / "us.json"
+    )
 
-        # Income Fields
-        # AS, GU, and MP all share the same variable names, but VI is different
-        # https://api.census.gov/data/2010/dec/as.html
-        # https://api.census.gov/data/2010/dec/gu/variables.html
-        # https://api.census.gov/data/2010/dec/mp/variables.html
-        # https://api.census.gov/data/2010/dec/vi/variables.html
-
-        # Total population field is the same in all island areas
-        self.TOTAL_POP_FIELD = self.TOTAL_POP_VI_FIELD = "P001001"
-        self.TOTAL_POP_FIELD_NAME = "Total population in 2009"
-
-        self.MEDIAN_INCOME_FIELD = "PBG049001"
-        self.MEDIAN_INCOME_VI_FIELD = "PBG047001"
-        self.MEDIAN_INCOME_FIELD_NAME = "Median household income in 2009 ($)"
-        self.AREA_MEDIAN_INCOME_FIELD_NAME = (
-            "Median household income as a percent of "
-            "territory median income in 2009"
+    def __get_api_url(
+        self,
+        state_abbreviation: str,
+        name_list: List[str],
+        fips: str,
+        county: str,
+    ) -> str:
+        url = (
+            f"https://api.census.gov/data/{self.DECENNIAL_YEAR}/dec/dhc{state_abbreviation}?get=NAME,{name_list}"
+            + f"&for=tract:*&in=state:{fips}%20county:{county}"
         )
-
-        self.TERRITORY_MEDIAN_INCOME_FIELD = "Territory Median Income"
-
-        self.TOTAL_HOUSEHOLD_RATIO_INCOME_TO_POVERTY_LEVEL_FIELD = "PBG083001"
-        self.TOTAL_HOUSEHOLD_RATIO_INCOME_TO_POVERTY_LEVEL_VI_FIELD = (
-            "PBG077001"
-        )
-        self.TOTAL_HOUSEHOLD_RATIO_INCOME_TO_POVERTY_LEVEL_FIELD_NAME = (
-            "TOTAL; RATIO OF INCOME TO POVERTY LEVEL IN 2009"
-        )
-
-        self.HOUSEHOLD_OVER_200_PERC_POVERTY_LEVEL_FIELD = "PBG083010"
-        self.HOUSEHOLD_OVER_200_PERC_POVERTY_LEVEL_VI_FIELD = "PBG077010"
-        self.HOUSEHOLD_OVER_200_PERC_POVERTY_LEVEL_FIELD_NAME = (
-            "Total!!2.00 and over; RATIO OF INCOME TO POVERTY LEVEL IN 2009"
-        )
-
-        self.PERCENTAGE_HOUSEHOLDS_BELOW_200_PERC_POVERTY_LEVEL_FIELD_NAME = (
-            "Percentage households below 200% of federal poverty line in 2009"
-        )
-
-        # We will combine three fields to get households < 100% FPL.
-        self.HOUSEHOLD_UNDER_100_PERC_POVERTY_LEVEL_FIELD_PART_ONE = (
-            "PBG083002"  # Total!!Under .50
-        )
-        self.HOUSEHOLD_UNDER_100_PERC_POVERTY_LEVEL_FIELD_PART_TWO = (
-            "PBG083003"  # Total!!.50 to .74
-        )
-        self.HOUSEHOLD_UNDER_100_PERC_POVERTY_LEVEL_FIELD_PART_THREE = (
-            "PBG083004"  # Total!!.75 to .99
-        )
-
-        # Same fields, for Virgin Islands.
-        self.HOUSEHOLD_UNDER_100_PERC_POVERTY_LEVEL_FIELD_VI_PART_ONE = (
-            "PBG077002"  # Total!!Under .50
-        )
-        self.HOUSEHOLD_UNDER_100_PERC_POVERTY_LEVEL_FIELD_VI_PART_TWO = (
-            "PBG077003"  # Total!!.50 to .74
-        )
-        self.HOUSEHOLD_UNDER_100_PERC_POVERTY_LEVEL_FIELD_VI_PART_THREE = (
-            "PBG077004"  # Total!!.75 to .99
-        )
-
-        self.HOUSEHOLD_OVER_200_PERC_POVERTY_LEVEL_FIELD = "PBG083010"
-        self.HOUSEHOLD_OVER_200_PERC_POVERTY_LEVEL_VI_FIELD = "PBG077010"
-        self.HOUSEHOLD_OVER_200_PERC_POVERTY_LEVEL_FIELD_NAME = (
-            "Total!!2.00 and over; RATIO OF INCOME TO POVERTY LEVEL IN 2009"
-        )
-
-        self.PERCENTAGE_HOUSEHOLDS_BELOW_100_PERC_POVERTY_LEVEL_FIELD_NAME = (
-            "Percentage households below 100% of federal poverty line in 2009"
-        )
-
-        # High School Education Fields
-        self.TOTAL_POPULATION_FIELD = "PBG026001"
-        self.TOTAL_POPULATION_VI_FIELD = "PCT032001"
-        self.TOTAL_POPULATION_FIELD_NAME = "Total; SEX BY EDUCATIONAL ATTAINMENT FOR THE POPULATION 25 YEARS AND OVER"
-
-        self.MALE_HIGH_SCHOOL_ED_FIELD = "PBG026005"
-        self.MALE_HIGH_SCHOOL_ED_VI_FIELD = "PCT032011"
-        self.MALE_HIGH_SCHOOL_ED_FIELD_NAME = (
-            "Total!!Male!!High school graduate, GED, or alternative; "
-            "SEX BY EDUCATIONAL ATTAINMENT FOR THE POPULATION 25 YEARS AND OVER"
-        )
-
-        self.FEMALE_HIGH_SCHOOL_ED_FIELD = "PBG026012"
-        self.FEMALE_HIGH_SCHOOL_ED_VI_FIELD = "PCT032028"
-        self.FEMALE_HIGH_SCHOOL_ED_FIELD_NAME = (
-            "Total!!Female!!High school graduate, GED, or alternative; "
-            "SEX BY EDUCATIONAL ATTAINMENT FOR THE POPULATION 25 YEARS AND OVER"
-        )
-
-        self.PERCENTAGE_HIGH_SCHOOL_ED_FIELD_NAME = "Percent individuals age 25 or over with less than high school degree in 2009"
-
-        # Employment fields
-        self.EMPLOYMENT_MALE_IN_LABOR_FORCE_FIELD = (
-            "PBG038003"  # Total!!Male!!In labor force
-        )
-        self.EMPLOYMENT_MALE_UNEMPLOYED_FIELD = (
-            "PBG038007"  # Total!!Male!!In labor force!!Civilian!!Unemployed
-        )
-        self.EMPLOYMENT_FEMALE_IN_LABOR_FORCE_FIELD = (
-            "PBG038010"  # Total!!Female!!In labor force
-        )
-        self.EMPLOYMENT_FEMALE_UNEMPLOYED_FIELD = (
-            "PBG038014"  # Total!!Female!!In labor force!!Civilian!!Unemployed
-        )
-
-        # Same fields, Virgin Islands.
-        self.EMPLOYMENT_MALE_IN_LABOR_FORCE_VI_FIELD = (
-            "PBG036003"  # Total!!Male!!In labor force
-        )
-        self.EMPLOYMENT_MALE_UNEMPLOYED_VI_FIELD = (
-            "PBG036007"  # Total!!Male!!In labor force!!Civilian!!Unemployed
-        )
-        self.EMPLOYMENT_FEMALE_IN_LABOR_FORCE_VI_FIELD = (
-            "PBG036010"  # Total!!Female!!In labor force
-        )
-        self.EMPLOYMENT_FEMALE_UNEMPLOYED_VI_FIELD = (
-            "PBG036014"  # Total!!Female!!In labor force!!Civilian!!Unemployed
-        )
-
-        self.UNEMPLOYMENT_FIELD_NAME = (
-            field_names.CENSUS_DECENNIAL_UNEMPLOYMENT_FIELD_2009
-        )
-
-        # Race/Ethnicity fields
-        self.TOTAL_RACE_POPULATION_FIELD = "PCT086001"  # Total
-        self.ASIAN_FIELD = "PCT086002"  # Total!!Asian
-        self.BLACK_FIELD = "PCT086003"  # Total!!Black or African American
-        self.HAWAIIAN_FIELD = (
-            "PCT086004"  # Total!!Native Hawaiian and Other Pacific Islander
-        )
-        # Note that the 2010 census for island araeas does not break out
-        # hispanic and non-hispanic white, so this is slightly different from
-        # our other demographic data
-        self.NON_HISPANIC_WHITE_FIELD = "PCT086005"  # Total!!White
-        self.HISPANIC_FIELD = "PCT086006"  # Total!!Hispanic or Latino
-        self.OTHER_RACE_FIELD = "PCT086007"  # Total!!Other Ethnic Origin or Ra
-
-        self.TOTAL_RACE_POPULATION_VI_FIELD = "P003001"  # Total
-        self.BLACK_VI_FIELD = (
-            "P003003"  # Total!!One race!!Black or African American alone
-        )
-        self.AMERICAN_INDIAN_VI_FIELD = "P003005"  # Total!!One race!!American Indian and Alaska Native alone
-        self.ASIAN_VI_FIELD = "P003006"  # Total!!One race!!Asian alone
-        self.HAWAIIAN_VI_FIELD = "P003007"  # Total!!One race!!Native Hawaiian and Other Pacific Islander alone
-        self.TWO_OR_MORE_RACES_VI_FIELD = "P003009"  # Total!!Two or More Races
-        self.NON_HISPANIC_WHITE_VI_FIELD = (
-            "P005006"  # Total!!Not Hispanic or Latino!!One race!!White alone
-        )
-        self.HISPANIC_VI_FIELD = "P005002"  # Total!!Hispanic or Latino
-        self.OTHER_RACE_VI_FIELD = (
-            "P003008"  # Total!!One race!!Some Other Race alone
-        )
-        self.TOTAL_RACE_POPULATION_VI_FIELD = "P003001"  # Total
-
-        self.TOTAL_RACE_POPULATION_FIELD_NAME = (
-            "Total population surveyed on racial data"
-        )
-        self.BLACK_FIELD_NAME = "Black or African American"
-        self.AMERICAN_INDIAN_FIELD_NAME = "American Indian / Alaska Native"
-        self.ASIAN_FIELD_NAME = "Asian"
-        self.HAWAIIAN_FIELD_NAME = "Native Hawaiian or Pacific"
-        self.TWO_OR_MORE_RACES_FIELD_NAME = "two or more races"
-        self.NON_HISPANIC_WHITE_FIELD_NAME = "White"
-        self.HISPANIC_FIELD_NAME = "Hispanic or Latino"
-        # Note that `other` is lowercase because the whole field will show up in the download
-        # file as "Percent other races"
-        self.OTHER_RACE_FIELD_NAME = "other races"
-
-        # Name output demographics fields.
-        self.RE_OUTPUT_FIELDS = [
-            self.BLACK_FIELD_NAME,
-            self.AMERICAN_INDIAN_FIELD_NAME,
-            self.ASIAN_FIELD_NAME,
-            self.HAWAIIAN_FIELD_NAME,
-            self.TWO_OR_MORE_RACES_FIELD_NAME,
-            self.NON_HISPANIC_WHITE_FIELD_NAME,
-            self.HISPANIC_FIELD_NAME,
-            self.OTHER_RACE_FIELD_NAME,
-        ]
-
-        var_list = [
-            self.MEDIAN_INCOME_FIELD,
-            self.TOTAL_HOUSEHOLD_RATIO_INCOME_TO_POVERTY_LEVEL_FIELD,
-            self.HOUSEHOLD_OVER_200_PERC_POVERTY_LEVEL_FIELD,
-            self.TOTAL_POPULATION_FIELD,
-            self.MALE_HIGH_SCHOOL_ED_FIELD,
-            self.FEMALE_HIGH_SCHOOL_ED_FIELD,
-            self.HOUSEHOLD_UNDER_100_PERC_POVERTY_LEVEL_FIELD_PART_ONE,
-            self.HOUSEHOLD_UNDER_100_PERC_POVERTY_LEVEL_FIELD_PART_TWO,
-            self.HOUSEHOLD_UNDER_100_PERC_POVERTY_LEVEL_FIELD_PART_THREE,
-            self.EMPLOYMENT_MALE_IN_LABOR_FORCE_FIELD,
-            self.EMPLOYMENT_MALE_UNEMPLOYED_FIELD,
-            self.EMPLOYMENT_FEMALE_IN_LABOR_FORCE_FIELD,
-            self.EMPLOYMENT_FEMALE_UNEMPLOYED_FIELD,
-            self.TOTAL_POP_FIELD,
-            self.TOTAL_RACE_POPULATION_FIELD,
-            self.ASIAN_FIELD,
-            self.BLACK_FIELD,
-            self.HAWAIIAN_FIELD,
-            self.NON_HISPANIC_WHITE_FIELD,
-            self.HISPANIC_FIELD,
-            self.OTHER_RACE_FIELD,
-        ]
-        var_list = ",".join(var_list)
-
-        var_list_vi = [
-            self.MEDIAN_INCOME_VI_FIELD,
-            self.TOTAL_HOUSEHOLD_RATIO_INCOME_TO_POVERTY_LEVEL_VI_FIELD,
-            self.HOUSEHOLD_OVER_200_PERC_POVERTY_LEVEL_VI_FIELD,
-            self.TOTAL_POPULATION_VI_FIELD,
-            self.MALE_HIGH_SCHOOL_ED_VI_FIELD,
-            self.FEMALE_HIGH_SCHOOL_ED_VI_FIELD,
-            self.HOUSEHOLD_UNDER_100_PERC_POVERTY_LEVEL_FIELD_VI_PART_ONE,
-            self.HOUSEHOLD_UNDER_100_PERC_POVERTY_LEVEL_FIELD_VI_PART_TWO,
-            self.HOUSEHOLD_UNDER_100_PERC_POVERTY_LEVEL_FIELD_VI_PART_THREE,
-            self.EMPLOYMENT_MALE_IN_LABOR_FORCE_VI_FIELD,
-            self.EMPLOYMENT_MALE_UNEMPLOYED_VI_FIELD,
-            self.EMPLOYMENT_FEMALE_IN_LABOR_FORCE_VI_FIELD,
-            self.EMPLOYMENT_FEMALE_UNEMPLOYED_VI_FIELD,
-            self.TOTAL_POP_VI_FIELD,
-            self.BLACK_VI_FIELD,
-            self.AMERICAN_INDIAN_VI_FIELD,
-            self.ASIAN_VI_FIELD,
-            self.HAWAIIAN_VI_FIELD,
-            self.TWO_OR_MORE_RACES_VI_FIELD,
-            self.NON_HISPANIC_WHITE_VI_FIELD,
-            self.HISPANIC_VI_FIELD,
-            self.OTHER_RACE_VI_FIELD,
-            self.TOTAL_RACE_POPULATION_VI_FIELD,
-        ]
-        var_list_vi = ",".join(var_list_vi)
-
-        self.FIELD_NAME_XWALK = {
-            self.MEDIAN_INCOME_FIELD: self.MEDIAN_INCOME_FIELD_NAME,
-            self.MEDIAN_INCOME_VI_FIELD: self.MEDIAN_INCOME_FIELD_NAME,
-            self.TOTAL_HOUSEHOLD_RATIO_INCOME_TO_POVERTY_LEVEL_FIELD: self.TOTAL_HOUSEHOLD_RATIO_INCOME_TO_POVERTY_LEVEL_FIELD_NAME,
-            self.TOTAL_HOUSEHOLD_RATIO_INCOME_TO_POVERTY_LEVEL_VI_FIELD: self.TOTAL_HOUSEHOLD_RATIO_INCOME_TO_POVERTY_LEVEL_FIELD_NAME,
-            self.HOUSEHOLD_OVER_200_PERC_POVERTY_LEVEL_FIELD: self.HOUSEHOLD_OVER_200_PERC_POVERTY_LEVEL_FIELD_NAME,
-            self.HOUSEHOLD_OVER_200_PERC_POVERTY_LEVEL_VI_FIELD: self.HOUSEHOLD_OVER_200_PERC_POVERTY_LEVEL_FIELD_NAME,
-            self.TOTAL_POPULATION_FIELD: self.TOTAL_POPULATION_FIELD_NAME,
-            self.TOTAL_POPULATION_VI_FIELD: self.TOTAL_POPULATION_FIELD_NAME,
-            self.MALE_HIGH_SCHOOL_ED_FIELD: self.MALE_HIGH_SCHOOL_ED_FIELD_NAME,
-            self.MALE_HIGH_SCHOOL_ED_VI_FIELD: self.MALE_HIGH_SCHOOL_ED_FIELD_NAME,
-            self.FEMALE_HIGH_SCHOOL_ED_FIELD: self.FEMALE_HIGH_SCHOOL_ED_FIELD_NAME,
-            self.FEMALE_HIGH_SCHOOL_ED_VI_FIELD: self.FEMALE_HIGH_SCHOOL_ED_FIELD_NAME,
-            self.HOUSEHOLD_UNDER_100_PERC_POVERTY_LEVEL_FIELD_PART_ONE: self.HOUSEHOLD_UNDER_100_PERC_POVERTY_LEVEL_FIELD_PART_ONE,
-            self.HOUSEHOLD_UNDER_100_PERC_POVERTY_LEVEL_FIELD_VI_PART_ONE: self.HOUSEHOLD_UNDER_100_PERC_POVERTY_LEVEL_FIELD_PART_ONE,
-            self.HOUSEHOLD_UNDER_100_PERC_POVERTY_LEVEL_FIELD_PART_TWO: self.HOUSEHOLD_UNDER_100_PERC_POVERTY_LEVEL_FIELD_PART_TWO,
-            self.HOUSEHOLD_UNDER_100_PERC_POVERTY_LEVEL_FIELD_VI_PART_TWO: self.HOUSEHOLD_UNDER_100_PERC_POVERTY_LEVEL_FIELD_PART_TWO,
-            self.HOUSEHOLD_UNDER_100_PERC_POVERTY_LEVEL_FIELD_PART_THREE: self.HOUSEHOLD_UNDER_100_PERC_POVERTY_LEVEL_FIELD_PART_THREE,
-            self.HOUSEHOLD_UNDER_100_PERC_POVERTY_LEVEL_FIELD_VI_PART_THREE: self.HOUSEHOLD_UNDER_100_PERC_POVERTY_LEVEL_FIELD_PART_THREE,
-            self.EMPLOYMENT_MALE_IN_LABOR_FORCE_VI_FIELD: self.EMPLOYMENT_MALE_IN_LABOR_FORCE_FIELD,
-            self.EMPLOYMENT_MALE_UNEMPLOYED_VI_FIELD: self.EMPLOYMENT_MALE_UNEMPLOYED_FIELD,
-            self.EMPLOYMENT_FEMALE_IN_LABOR_FORCE_VI_FIELD: self.EMPLOYMENT_FEMALE_IN_LABOR_FORCE_FIELD,
-            self.EMPLOYMENT_FEMALE_UNEMPLOYED_VI_FIELD: self.EMPLOYMENT_FEMALE_UNEMPLOYED_FIELD,
-            self.EMPLOYMENT_MALE_IN_LABOR_FORCE_FIELD: self.EMPLOYMENT_MALE_IN_LABOR_FORCE_FIELD,
-            self.EMPLOYMENT_MALE_UNEMPLOYED_FIELD: self.EMPLOYMENT_MALE_UNEMPLOYED_FIELD,
-            self.EMPLOYMENT_FEMALE_IN_LABOR_FORCE_FIELD: self.EMPLOYMENT_FEMALE_IN_LABOR_FORCE_FIELD,
-            self.EMPLOYMENT_FEMALE_UNEMPLOYED_FIELD: self.EMPLOYMENT_FEMALE_UNEMPLOYED_FIELD,
-            self.TOTAL_RACE_POPULATION_FIELD: self.TOTAL_RACE_POPULATION_FIELD_NAME,
-            self.TOTAL_RACE_POPULATION_VI_FIELD: self.TOTAL_RACE_POPULATION_FIELD_NAME,
-            # Note there is no American Indian data for AS/GU/MI
-            self.AMERICAN_INDIAN_VI_FIELD: self.AMERICAN_INDIAN_FIELD_NAME,
-            self.ASIAN_FIELD: self.ASIAN_FIELD_NAME,
-            self.ASIAN_VI_FIELD: self.ASIAN_FIELD_NAME,
-            self.BLACK_FIELD: self.BLACK_FIELD_NAME,
-            self.BLACK_VI_FIELD: self.BLACK_FIELD_NAME,
-            self.HAWAIIAN_FIELD: self.HAWAIIAN_FIELD_NAME,
-            self.HAWAIIAN_VI_FIELD: self.HAWAIIAN_FIELD_NAME,
-            self.TWO_OR_MORE_RACES_VI_FIELD: self.TWO_OR_MORE_RACES_FIELD_NAME,
-            self.NON_HISPANIC_WHITE_FIELD: self.NON_HISPANIC_WHITE_FIELD_NAME,
-            self.NON_HISPANIC_WHITE_VI_FIELD: self.NON_HISPANIC_WHITE_FIELD_NAME,
-            self.HISPANIC_FIELD: self.HISPANIC_FIELD_NAME,
-            self.HISPANIC_VI_FIELD: self.HISPANIC_FIELD_NAME,
-            self.OTHER_RACE_FIELD: self.OTHER_RACE_FIELD_NAME,
-            self.OTHER_RACE_VI_FIELD: self.OTHER_RACE_FIELD_NAME,
-        }
-
-        # To do: Ask Census Slack Group about whether you need to hardcode the county fips
-        # https://uscensusbureau.slack.com/archives/C6DGLC05B/p1635218909012600
-        self.ISLAND_TERRITORIES = [
-            {
-                "state_abbreviation": "as",
-                "fips": "60",
-                "county_fips": ["010", "020", "030", "040", "050"],
-                "var_list": var_list,
-                # Note: we hardcode the median income for each territory in this dict,
-                # because that data is hard to programmatically access.
-                self.TERRITORY_MEDIAN_INCOME_FIELD: 23892,
-            },
-            {
-                "state_abbreviation": "gu",
-                "fips": "66",
-                "county_fips": ["010"],
-                "var_list": var_list,
-                self.TERRITORY_MEDIAN_INCOME_FIELD: 48274,
-            },
-            {
-                "state_abbreviation": "mp",
-                "fips": "69",
-                "county_fips": ["085", "100", "110", "120"],
-                "var_list": var_list,
-                self.TERRITORY_MEDIAN_INCOME_FIELD: 19958,
-            },
-            {
-                "state_abbreviation": "vi",
-                "fips": "78",
-                "county_fips": ["010", "020", "030"],
-                "var_list": var_list_vi,
-                self.TERRITORY_MEDIAN_INCOME_FIELD: 37254,
-            },
-        ]
-
-        self.API_URL = (
-            "https://api.census.gov/data/{}/dec/{}?get=NAME,{}"
-            + "&for=tract:*&in=state:{}%20county:{}"
-        )
-
         census_api_key = os.environ.get("CENSUS_API_KEY")
         if census_api_key:
-            self.API_URL = self.API_URL + f"&key={census_api_key}"
+            url += f"&key={census_api_key}"
+        return url
 
-        self.final_race_fields: List[str] = []
+    def __get_destination_path(
+        self,
+        state_abbreviation: str,
+        fips: str,
+        county: str,
+        test_path: Path = None,
+    ) -> str:
+        root_path = test_path or self.get_sources_path()
+        return (
+            root_path
+            / str(self.DECENNIAL_YEAR)
+            / state_abbreviation
+            / fips
+            / county
+            / "census.json"
+        )
 
-        self.df: pd.DataFrame
-        self.df_vi: pd.DataFrame
-        self.df_all: pd.DataFrame
+    def __init__(self):
+        self.df_all = pd.DataFrame()
+        self.final_race_fields = []
 
-    def get_data_sources(self) -> [DataSource]:
-
+    def get_data_sources(self) -> List[DataSource]:
         sources = []
-
-        for island in self.ISLAND_TERRITORIES:
+        for island in DEC_TERRITORY_PARAMS:
             for county in island["county_fips"]:
-
-                api_url = self.API_URL.format(
-                    self.DECENNIAL_YEAR,
+                api_url = self.__get_api_url(
                     island["state_abbreviation"],
-                    island["var_list"],
+                    ",".join(island["xwalk"].keys()),
                     island["fips"],
                     county,
                 )
-
                 sources.append(
                     FileDataSource(
-                        source=api_url,
-                        destination=self.get_sources_path()
-                        / str(self.DECENNIAL_YEAR)
-                        / island["state_abbreviation"]
-                        / island["fips"]
-                        / county
-                        / "census.json",
+                        api_url,
+                        self.__get_destination_path(
+                            island["state_abbreviation"], island["fips"], county
+                        ),
                     )
                 )
-
         return sources
 
-    def extract(self, use_cached_data_sources: bool = False) -> None:
-
-        super().extract(
-            use_cached_data_sources
-        )  # download and extract data sources
-
-        dfs = []
-        dfs_vi = []
-        for island in self.ISLAND_TERRITORIES:
-            logger.debug(
-                f"Downloading data for state/territory {island['state_abbreviation']}"
-            )
-            for county in island["county_fips"]:
-
+    def extract(
+        self,
+        use_cached_data_sources: bool = False,
+        test_territory_params=None,
+        test_path: Path = None,
+    ) -> None:
+        super().extract(use_cached_data_sources)
+        for territory in test_territory_params or DEC_TERRITORY_PARAMS:
+            for county in territory["county_fips"]:
+                abbr = territory["state_abbreviation"]
+                file_path = self.__get_destination_path(
+                    abbr, territory["fips"], county, test_path=test_path
+                )
                 try:
-                    filepath = (
-                        self.get_sources_path()
-                        / str(self.DECENNIAL_YEAR)
-                        / island["state_abbreviation"]
-                        / island["fips"]
-                        / county
-                        / "census.json"
-                    )
-                    df = json.load(filepath.open())
-                except ValueError as e:
+                    json_data = json.load(file_path.open())
+                except (FileNotFoundError, ValueError) as e:
                     logger.error(
                         f"Could not load content in census decennial ETL because {e}."
                     )
+                    raise
+                df = pd.DataFrame(json_data[1:], columns=json_data[0])
+                # Rename the columns to their common names
+                df.rename(columns=territory["xwalk"], inplace=True)
 
-                # First row is the header
-                df = pd.DataFrame(df[1:], columns=df[0])
+                # Convert columns to numeric where applicable
+                for column in df.columns:
+                    if column not in ["state", "county", "NAME", "tract"]:
+                        df[column] = pd.to_numeric(df[column], errors="ignore")
 
-                for col in island["var_list"].split(","):
-                    # Converting appropriate variables to numeric.
-                    # Also replacing 0s with NaNs
-                    df[col] = pd.to_numeric(df[col])
+                # Add the territory median income
+                df.loc[
+                    df[field_names.CENSUS_DECENNIAL_TOTAL_POPULATION_FIELD_2019]
+                    > 0,
+                    DEC_FIELD_NAMES.TERRITORY_MEDIAN_INCOME,
+                ] = territory["median_income"]
+                self.df_all = pd.concat([self.df_all, df], ignore_index=True)
 
-                    # TO-DO: CHECK THIS. I think it makes sense to replace 0 with NaN
-                    # because for our variables of interest (e.g. Median Household Income,
-                    # it doesn't make sense for that to be 0.)
-                    # Likely, it's actually missing but can't find a cite for that in the docs
-                    df[col] = df[col].replace(0, np.nan)
+    def _merge_tracts_2010_compatibility(self):
+        """Merges tract 69120950200 to match 2010 tracts"""
+        # MP 69/120 69120950200 = 69120950201, 69120950202
+        # Tract has been split, but 69120950202 has no data, so we just make 69120950200 = 69120950201
+        self.df_all = self.df_all.drop(
+            self.df_all[
+                self.df_all[field_names.GEOID_TRACT_FIELD] == "69120950202"
+            ].index
+        )
+        self.df_all.loc[
+            self.df_all[field_names.GEOID_TRACT_FIELD] == "69120950201",
+            field_names.GEOID_TRACT_FIELD,
+        ] = "69120950200"
 
-                if island["state_abbreviation"] == "vi":
-                    dfs_vi.append(df)
-                else:
-                    dfs.append(df)
+    def _impute_income(self, geojson_path: Path):
+        """Impute income for both income measures."""
+        # Merges Census geojson to imput values from.
+        logger.debug(f"Reading GeoJSON from {geojson_path}")
+        geo_df = gpd.read_file(geojson_path)
+        self.df_all = CensusACSETL.merge_geojson(
+            df=self.df_all,
+            usa_geo_df=geo_df,
+        )
 
-        self.df = pd.concat(dfs)
-        self.df_vi = pd.concat(dfs_vi)
+        logger.debug("Imputing income information")
+        impute_var_named_tup_list = [
+            CensusACSETL.ImputeVariables(
+                raw_field_name=field_names.CENSUS_DECENNIAL_POVERTY_LESS_THAN_200_FPL_FIELD_2019,
+                imputed_field_name=DEC_FIELD_NAMES.IMPUTED_PERCENTAGE_HOUSEHOLDS_BELOW_200_PERC_POVERTY_LEVEL,
+            ),
+        ]
+        self.df_all = calculate_income_measures(
+            impute_var_named_tup_list=impute_var_named_tup_list,
+            geo_df=self.df_all,
+            geoid_field=self.GEOID_TRACT_FIELD_NAME,
+            population_field=field_names.CENSUS_DECENNIAL_TOTAL_POPULATION_FIELD_2019,
+        )
 
-    def transform(self) -> None:
-        # Rename All Fields
-        self.df.rename(columns=self.FIELD_NAME_XWALK, inplace=True)
-        self.df_vi.rename(columns=self.FIELD_NAME_XWALK, inplace=True)
+        logger.debug("Calculating with imputed values")
+        self.df_all[
+            field_names.CENSUS_DECENNIAL_ADJUSTED_POVERTY_LESS_THAN_200_FPL_FIELD_2019
+        ] = (
+            self.df_all[
+                field_names.CENSUS_DECENNIAL_POVERTY_LESS_THAN_200_FPL_FIELD_2019
+            ].fillna(
+                self.df_all[
+                    DEC_FIELD_NAMES.IMPUTED_PERCENTAGE_HOUSEHOLDS_BELOW_200_PERC_POVERTY_LEVEL
+                ]
+            )
+            # Use clip to ensure that the values are not negative
+        ).clip(
+            lower=0
+        )
 
-        # Combine the dfs after renaming
-        self.df_all = pd.concat([self.df, self.df_vi])
+        # All values should have a value at this point for tracts with >0 population
+        assert (
+            self.df_all[
+                self.df_all[
+                    field_names.CENSUS_DECENNIAL_TOTAL_POPULATION_FIELD_2019
+                ]
+                >= 1
+            ][
+                field_names.CENSUS_DECENNIAL_ADJUSTED_POVERTY_LESS_THAN_200_FPL_FIELD_2019
+            ]
+            .isna()
+            .sum()
+            == 0
+        ), "Error: not all values were filled with imputations..."
 
-        # Rename total population:
-        self.df_all[self.TOTAL_POP_FIELD_NAME] = self.df_all[
-            self.TOTAL_POP_FIELD
+        # We generate a boolean that is TRUE when there is an imputed income but not a baseline income, and FALSE otherwise.
+        # This allows us to see which tracts have an imputed income.
+        self.df_all[field_names.ISLAND_AREAS_IMPUTED_INCOME_FLAG_FIELD] = (
+            self.df_all[
+                field_names.CENSUS_DECENNIAL_ADJUSTED_POVERTY_LESS_THAN_200_FPL_FIELD_2019
+            ].notna()
+            & self.df_all[
+                field_names.CENSUS_DECENNIAL_POVERTY_LESS_THAN_200_FPL_FIELD_2019
+            ].isna()
+        )
+
+    def transform(self, geojson_path: Path = CENSUS_GEOJSON_PATH) -> None:
+        # Creating Geo ID (Census Block Group) Field Name
+        self.df_all[field_names.GEOID_TRACT_FIELD] = (
+            self.df_all["state"] + self.df_all["county"] + self.df_all["tract"]
+        )
+
+        # Combine the two MP 2020 tracts that were split from one 2010 tract
+        self._merge_tracts_2010_compatibility()
+
+        # Replace invalid numeric values with NaN
+        numeric_columns = self.df_all.select_dtypes(include="number").columns
+        for num_column in numeric_columns:
+            self.df_all.loc[self.df_all[num_column] < -999, num_column] = np.nan
+
+        # Percentage of households below 100% FPL
+        self.df_all[
+            field_names.CENSUS_DECENNIAL_POVERTY_LESS_THAN_100_FPL_FIELD_2019
+        ] = (
+            self.df_all[DEC_FIELD_NAMES.HOUSEHOLD_POVERTY_LEVEL_UNDER_0_5]
+            + self.df_all[DEC_FIELD_NAMES.HOUSEHOLD_POVERTY_LEVEL_UNDER_0_74]
+            + self.df_all[DEC_FIELD_NAMES.HOUSEHOLD_POVERTY_LEVEL_UNDER_0_99]
+        ) / self.df_all[
+            DEC_FIELD_NAMES.TOTAL_HOUSEHOLD_POVERTY_LEVEL
         ]
 
         # Percentage of households below 200% which is
-        # [PBG083001 (total) - PBG083010 (num households over 200%)] / PBG083001 (total)
         self.df_all[
-            self.PERCENTAGE_HOUSEHOLDS_BELOW_200_PERC_POVERTY_LEVEL_FIELD_NAME
+            field_names.CENSUS_DECENNIAL_POVERTY_LESS_THAN_200_FPL_FIELD_2019
         ] = (
-            self.df_all[
-                self.TOTAL_HOUSEHOLD_RATIO_INCOME_TO_POVERTY_LEVEL_FIELD_NAME
-            ]
-            - self.df_all[self.HOUSEHOLD_OVER_200_PERC_POVERTY_LEVEL_FIELD_NAME]
+            self.df_all[DEC_FIELD_NAMES.TOTAL_HOUSEHOLD_POVERTY_LEVEL]
+            - self.df_all[DEC_FIELD_NAMES.HOUSEHOLD_POVERTY_LEVEL_OVER_2_0]
         ) / self.df_all[
-            self.TOTAL_HOUSEHOLD_RATIO_INCOME_TO_POVERTY_LEVEL_FIELD_NAME
-        ]
-
-        # Percentage of households below 100% FPL
-        # which we get by adding `Total!!Under .50`, `Total!!.50 to .74`, ` Total!!.75 to .99`,
-        # and then dividing by PBG083001 (total)
-        self.df_all[
-            self.PERCENTAGE_HOUSEHOLDS_BELOW_100_PERC_POVERTY_LEVEL_FIELD_NAME
-        ] = (
-            self.df_all[
-                self.HOUSEHOLD_UNDER_100_PERC_POVERTY_LEVEL_FIELD_PART_ONE
-            ]
-            + self.df_all[
-                self.HOUSEHOLD_UNDER_100_PERC_POVERTY_LEVEL_FIELD_PART_TWO
-            ]
-            + self.df_all[
-                self.HOUSEHOLD_UNDER_100_PERC_POVERTY_LEVEL_FIELD_PART_THREE
-            ]
-        ) / self.df_all[
-            self.TOTAL_HOUSEHOLD_RATIO_INCOME_TO_POVERTY_LEVEL_FIELD_NAME
+            DEC_FIELD_NAMES.TOTAL_HOUSEHOLD_POVERTY_LEVEL
         ]
 
         # Percentage High School Achievement is
         # Percentage = (Male + Female) / (Total)
-        self.df_all[self.PERCENTAGE_HIGH_SCHOOL_ED_FIELD_NAME] = (
-            self.df_all[self.MALE_HIGH_SCHOOL_ED_FIELD_NAME]
-            + self.df_all[self.FEMALE_HIGH_SCHOOL_ED_FIELD_NAME]
-        ) / self.df_all[self.TOTAL_POPULATION_FIELD_NAME]
+        self.df_all[field_names.CENSUS_DECENNIAL_HIGH_SCHOOL_ED_FIELD_2019] = (
+            self.df_all[DEC_FIELD_NAMES.MALE_HIGH_SCHOOL_ED]
+            + self.df_all[DEC_FIELD_NAMES.FEMALE_HIGH_SCHOOL_ED]
+        ) / self.df_all[
+            field_names.CENSUS_DECENNIAL_TOTAL_POPULATION_FIELD_2019
+        ]
 
         # Calculate employment.
-        self.df_all[self.UNEMPLOYMENT_FIELD_NAME] = (
-            self.df_all[self.EMPLOYMENT_MALE_UNEMPLOYED_FIELD]
-            + self.df_all[self.EMPLOYMENT_FEMALE_UNEMPLOYED_FIELD]
+        self.df_all[field_names.CENSUS_DECENNIAL_UNEMPLOYMENT_FIELD_2019] = (
+            self.df_all[DEC_FIELD_NAMES.EMPLOYMENT_MALE_UNEMPLOYED]
+            + self.df_all[DEC_FIELD_NAMES.EMPLOYMENT_FEMALE_UNEMPLOYED]
         ) / (
-            self.df_all[self.EMPLOYMENT_MALE_IN_LABOR_FORCE_FIELD]
-            + self.df_all[self.EMPLOYMENT_FEMALE_IN_LABOR_FORCE_FIELD]
+            self.df_all[DEC_FIELD_NAMES.EMPLOYMENT_MALE_IN_LABOR_FORCE]
+            + self.df_all[DEC_FIELD_NAMES.EMPLOYMENT_FEMALE_IN_LABOR_FORCE]
         )
 
         # Calculate area median income
-        median_income_df = pd.DataFrame(self.ISLAND_TERRITORIES)
-        median_income_df = median_income_df[
-            ["fips", self.TERRITORY_MEDIAN_INCOME_FIELD]
-        ]
-        self.df_all = self.df_all.merge(
-            right=median_income_df, left_on="state", right_on="fips", how="left"
-        )
-        self.df_all[self.AREA_MEDIAN_INCOME_FIELD_NAME] = (
-            self.df_all[self.MEDIAN_INCOME_FIELD_NAME]
-            / self.df_all[self.TERRITORY_MEDIAN_INCOME_FIELD]
+        self.df_all[
+            field_names.CENSUS_DECENNIAL_AREA_MEDIAN_INCOME_PERCENT_FIELD_2019
+        ] = (
+            self.df_all[field_names.CENSUS_DECENNIAL_MEDIAN_INCOME_2019]
+            / self.df_all[DEC_FIELD_NAMES.TERRITORY_MEDIAN_INCOME]
         )
 
-        # Creating Geo ID (Census Block Group) Field Name
-        self.df_all[self.GEOID_TRACT_FIELD_NAME] = (
-            self.df_all["state"] + self.df_all["county"] + self.df_all["tract"]
+        # Calculate college attendance
+        self.df_all[DEC_FIELD_NAMES.COLLEGE_ATTENDANCE_POPULATION] = (
+            self.df_all[DEC_FIELD_NAMES.COLLEGE_ATTENDANCE_MALE_ENROLLED]
+            + self.df_all[DEC_FIELD_NAMES.COLLEGE_ATTENDANCE_FEMALE_ENROLLED]
+        )
+        self.df_all[DEC_FIELD_NAMES.COLLEGE_ATTENDANCE_PERCENT] = (
+            self.df_all[DEC_FIELD_NAMES.COLLEGE_ATTENDANCE_MALE_ENROLLED]
+            + self.df_all[DEC_FIELD_NAMES.COLLEGE_ATTENDANCE_FEMALE_ENROLLED]
+        ) / self.df_all[DEC_FIELD_NAMES.COLLEGE_ATTENDANCE_TOTAL_ENROLLED]
+        self.df_all[DEC_FIELD_NAMES.COLLEGE_NON_ATTENDANCE_PERCENT] = (
+            1 - self.df_all[DEC_FIELD_NAMES.COLLEGE_ATTENDANCE_PERCENT]
         )
 
         # Calculate stats by race
-        for race_field_name in self.RE_OUTPUT_FIELDS:
+        for race_field_name in OUTPUT_RACE_FIELDS:
             output_field_name = (
                 field_names.PERCENT_PREFIX
                 + race_field_name
-                + field_names.ISLAND_AREA_BACKFILL_SUFFIX
+                # 2010 vs 2020 WARNING
+                # We must keep the old 2009 date to make it compatible with all the other 2010 data
+                + f" in {field_names.DEC_DATA_YEAR}"
             )
-            self.final_race_fields.append(output_field_name)
             self.df_all[output_field_name] = (
                 self.df_all[race_field_name]
-                / self.df_all[self.TOTAL_RACE_POPULATION_FIELD_NAME]
+                / self.df_all[DEC_FIELD_NAMES.TOTAL_RACE_POPULATION]
             )
+            self.final_race_fields.append(output_field_name)
 
         # Reporting Missing Values
         for col in self.df_all.columns:
@@ -532,22 +306,27 @@ class CensusDecennialETL(ExtractTransformLoad):
                 f"There are {missing_value_count} missing values in the field {col} out of a total of {self.df_all.shape[0]} rows"
             )
 
+        self._impute_income(geojson_path)
+
     def load(self) -> None:
-        # mkdir census
         self.OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
-
         columns_to_include = [
-            self.GEOID_TRACT_FIELD_NAME,
-            self.TOTAL_POP_FIELD_NAME,
-            self.MEDIAN_INCOME_FIELD_NAME,
-            self.TERRITORY_MEDIAN_INCOME_FIELD,
-            self.AREA_MEDIAN_INCOME_FIELD_NAME,
-            self.PERCENTAGE_HOUSEHOLDS_BELOW_100_PERC_POVERTY_LEVEL_FIELD_NAME,
-            self.PERCENTAGE_HOUSEHOLDS_BELOW_200_PERC_POVERTY_LEVEL_FIELD_NAME,
-            self.PERCENTAGE_HIGH_SCHOOL_ED_FIELD_NAME,
-            self.UNEMPLOYMENT_FIELD_NAME,
+            field_names.GEOID_TRACT_FIELD,
+            field_names.CENSUS_DECENNIAL_TOTAL_POPULATION_FIELD_2019,
+            field_names.CENSUS_DECENNIAL_MEDIAN_INCOME_2019,
+            DEC_FIELD_NAMES.TERRITORY_MEDIAN_INCOME,
+            field_names.CENSUS_DECENNIAL_AREA_MEDIAN_INCOME_PERCENT_FIELD_2019,
+            field_names.CENSUS_DECENNIAL_POVERTY_LESS_THAN_100_FPL_FIELD_2019,
+            field_names.CENSUS_DECENNIAL_POVERTY_LESS_THAN_200_FPL_FIELD_2019,
+            DEC_FIELD_NAMES.IMPUTED_PERCENTAGE_HOUSEHOLDS_BELOW_200_PERC_POVERTY_LEVEL,
+            field_names.CENSUS_DECENNIAL_ADJUSTED_POVERTY_LESS_THAN_200_FPL_FIELD_2019,
+            field_names.CENSUS_DECENNIAL_UNEMPLOYMENT_FIELD_2019,
+            field_names.CENSUS_DECENNIAL_HIGH_SCHOOL_ED_FIELD_2019,
+            DEC_FIELD_NAMES.COLLEGE_ATTENDANCE_PERCENT,
+            DEC_FIELD_NAMES.COLLEGE_NON_ATTENDANCE,
+            DEC_FIELD_NAMES.COLLEGE_ATTENDANCE_POPULATION,
+            field_names.ISLAND_AREAS_IMPUTED_INCOME_FLAG_FIELD,
         ] + self.final_race_fields
-
         self.df_all[columns_to_include].to_csv(
             path_or_buf=self.OUTPUT_PATH / "usa.csv", index=False
         )

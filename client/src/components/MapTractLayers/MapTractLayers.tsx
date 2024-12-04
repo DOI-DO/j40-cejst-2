@@ -24,7 +24,7 @@ interface IMapTractLayers {
 export const featureURLForTilesetName = (tilesetName: string): string => {
   const flags = useFlags();
 
-  const pipelineStagingBaseURL = `https://justice40-data.s3.amazonaws.com/data-pipeline-staging`;
+  const pipelineStagingBaseURL = process.env.GATSBY_CDN_TILES_BASE_URL +`/data-pipeline-staging`;
   const XYZ_SUFFIX = '{z}/{x}/{y}.pbf';
 
   if ('stage_hash' in flags) {
@@ -38,13 +38,8 @@ export const featureURLForTilesetName = (tilesetName: string): string => {
   } else {
     // The feature tile base URL and path can either point locally or the CDN.
     // This is selected based on the DATA_SOURCE env variable.
-    const featureTileBaseURL = process.env.DATA_SOURCE === 'local' ?
-        process.env.GATSBY_LOCAL_TILES_BASE_URL :
-        process.env.GATSBY_CDN_TILES_BASE_URL;
-
-    const featureTilePath = process.env.DATA_SOURCE === 'local' ?
-      process.env.GATSBY_DATA_PIPELINE_SCORE_PATH_LOCAL :
-      process.env.GATSBY_1_0_SCORE_PATH;
+    const featureTileBaseURL = constants.TILE_BASE_URL;
+    const featureTilePath = constants.TILE_PATH;
 
     return [
       featureTileBaseURL,

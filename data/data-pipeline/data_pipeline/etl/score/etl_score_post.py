@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 from numpy import float64
 import pandas as pd
+import geopandas as gpd
 
 from data_pipeline.content.schemas.download_schemas import CodebookConfig
 from data_pipeline.content.schemas.download_schemas import CSVConfig
@@ -42,10 +43,12 @@ class PostScoreETL(ExtractTransformLoad):
         self.input_counties_df: pd.DataFrame
         self.input_states_df: pd.DataFrame
         self.input_score_df: pd.DataFrame
+        self.input_census_geo_df: gpd.GeoDataFrame
 
         self.output_score_county_state_merged_df: pd.DataFrame
         self.output_score_tiles_df: pd.DataFrame
         self.output_downloadable_df: pd.DataFrame
+        self.output_tract_search_df: pd.DataFrame
 
         # Define some constants for the YAML file
         # TODO: Implement this as a marshmallow schema.
@@ -105,6 +108,18 @@ class PostScoreETL(ExtractTransformLoad):
 
         return df
 
+    def _extract_census_geojson(self, geo_path: Path) -> gpd.GeoDataFrame:
+        """
+        Read in the Census Geo JSON data.
+
+        Returns:
+           gpd.GeoDataFrame: the census geo json data
+        """
+        logger.debug("Reading Census GeoJSON")
+        with open(geo_path, "r", encoding="utf-8") as file:
+            data = gpd.read_file(file)
+        return data
+
     def extract(self, use_cached_data_sources: bool = False) -> None:
 
         super().extract(
@@ -130,6 +145,9 @@ class PostScoreETL(ExtractTransformLoad):
         )
         self.input_score_df = self._extract_score(
             constants.DATA_SCORE_CSV_FULL_FILE_PATH
+        )
+        self.input_census_geo_df = self._extract_census_geojson(
+            constants.DATA_CENSUS_GEOJSON_FILE_PATH
         )
 
     def _transform_counties(
@@ -392,7 +410,23 @@ class PostScoreETL(ExtractTransformLoad):
 
         return final_df
 
+    def _create_tract_search_data(
+        self, census_geojson: gpd.GeoDataFrame
+    ) -> pd.DataFrame:
+        """
+        Generate a dataframe with only the tract IDs and the center lat/lon of each tract.
+
+        Returns:
+            pd.DataFrame: a dataframe with the tract search data
+        """
+        logger.debug("Creating Census tract search data")
+        columns_to_extract = ["GEOID10", "INTPTLAT10", "INTPTLON10"]
+        return pd.DataFrame(census_geojson[columns_to_extract])
+
     def transform(self) -> None:
+        self.output_tract_search_df = self._create_tract_search_data(
+            self.input_census_geo_df
+        )
         transformed_counties = self._transform_counties(self.input_counties_df)
         transformed_states = self._transform_states(self.input_states_df)
         transformed_score = self._transform_score(self.input_score_df)
@@ -408,6 +442,9 @@ class PostScoreETL(ExtractTransformLoad):
         )
         self.output_score_county_state_merged_df = (
             output_score_county_state_merged_df
+        )
+        self.output_tract_search_df = self._create_tract_search_data(
+            self.input_census_geo_df
         )
 
     def _load_score_csv_full(
@@ -592,6 +629,13 @@ class PostScoreETL(ExtractTransformLoad):
         ]
         zip_files(version_data_documentation_zip_path, files_to_compress)
 
+    def _load_search_tract_data(self, output_path: Path):
+        """Write the Census tract search data."""
+        logger.debug("Writing Census tract search data")
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        # We use the records orientation to easily import the JSON in JS.
+        self.output_tract_search_df.to_json(output_path, orient="records")
+
     def load(self) -> None:
         self._load_score_csv_full(
             self.output_score_county_state_merged_df,
@@ -600,4 +644,5 @@ class PostScoreETL(ExtractTransformLoad):
         self._load_tile_csv(
             self.output_score_tiles_df, constants.DATA_SCORE_CSV_TILES_FILE_PATH
         )
+        self._load_search_tract_data(constants.SCORE_TRACT_SEARCH_FILE_PATH)
         self._load_downloadable_zip(constants.SCORE_DOWNLOADABLE_DIR)

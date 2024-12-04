@@ -150,3 +150,6 @@ node_modules
 .python-version
 .DS_Store
 temp_dir
+
+# asdf tooling
+.tool-versions

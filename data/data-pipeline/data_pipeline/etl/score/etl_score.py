@@ -54,6 +54,7 @@ class ScoreETL(ExtractTransformLoad):
         self.eamlis_df: pd.DataFrame
         self.fuds_df: pd.DataFrame
         self.tribal_overlap_df: pd.DataFrame
+        self.v1_0_score_results_df: pd.DataFrame
 
         self.ISLAND_DEMOGRAPHIC_BACKFILL_FIELDS: List[str] = []
 
@@ -166,7 +167,7 @@ class ScoreETL(ExtractTransformLoad):
         census_decennial_csv = (
             constants.DATA_PATH
             / "dataset"
-            / "census_decennial_2010"
+            / "census_decennial_2020"
             / "usa.csv"
         )
         self.census_decennial_df = pd.read_csv(
@@ -203,6 +204,25 @@ class ScoreETL(ExtractTransformLoad):
             dtype={self.GEOID_TRACT_FIELD_NAME: "string"},
             low_memory=False,
             header=None,
+        )
+
+        # Load v1.0 score results for grandfathering purposes
+        score_v1_0_csv = (
+            constants.STATIC_DATA_PATH / "v1.0-score-results-usa.csv"
+        )
+        self.v1_0_score_results_df = pd.read_csv(
+            score_v1_0_csv,
+            dtype={self.GEOID_TRACT_FIELD_NAME: "string"},
+            low_memory=False,
+        )
+        # Only keep the columns we need and rename them as they will clash
+        # with the new score DF.
+        self.v1_0_score_results_df = self.v1_0_score_results_df[
+            [field_names.GEOID_TRACT_FIELD, field_names.FINAL_SCORE_N_BOOLEAN]
+        ].rename(
+            columns={
+                field_names.FINAL_SCORE_N_BOOLEAN: field_names.FINAL_SCORE_N_BOOLEAN_V1_0,
+            }
         )
 
     def _join_tract_dfs(self, census_tract_dfs: list) -> pd.DataFrame:
@@ -364,6 +384,7 @@ class ScoreETL(ExtractTransformLoad):
             self.eamlis_df,
             self.fuds_df,
             self.tribal_overlap_df,
+            self.v1_0_score_results_df,
         ]
 
         # Sanity check each data frame before merging.
@@ -470,12 +491,14 @@ class ScoreETL(ExtractTransformLoad):
             field_names.EXPECTED_BUILDING_LOSS_RATE_FIELD,
             field_names.EXPECTED_AGRICULTURE_LOSS_RATE_FIELD,
             field_names.EXPECTED_POPULATION_LOSS_RATE_FIELD,
-            field_names.CENSUS_DECENNIAL_HIGH_SCHOOL_ED_FIELD_2009,
-            field_names.CENSUS_DECENNIAL_POVERTY_LESS_THAN_100_FPL_FIELD_2009,
-            field_names.CENSUS_DECENNIAL_UNEMPLOYMENT_FIELD_2009,
+            field_names.CENSUS_DECENNIAL_HIGH_SCHOOL_ED_FIELD_2019,
+            field_names.CENSUS_DECENNIAL_POVERTY_LESS_THAN_100_FPL_FIELD_2019,
+            field_names.CENSUS_DECENNIAL_POVERTY_LESS_THAN_200_FPL_FIELD_2019,
+            field_names.CENSUS_DECENNIAL_ADJUSTED_POVERTY_LESS_THAN_200_FPL_FIELD_2019,
+            field_names.CENSUS_DECENNIAL_UNEMPLOYMENT_FIELD_2019,
             field_names.CENSUS_UNEMPLOYMENT_FIELD_2010,
             field_names.CENSUS_POVERTY_LESS_THAN_100_FPL_FIELD_2010,
-            field_names.CENSUS_DECENNIAL_TOTAL_POPULATION_FIELD_2009,
+            field_names.CENSUS_DECENNIAL_TOTAL_POPULATION_FIELD_2019,
             field_names.UST_FIELD,
             field_names.DOT_TRAVEL_BURDEN_FIELD,
             field_names.FUTURE_FLOOD_RISK_FIELD,
@@ -512,6 +535,7 @@ class ScoreETL(ExtractTransformLoad):
             field_names.ELIGIBLE_FUDS_BINARY_FIELD_NAME,
             field_names.HISTORIC_REDLINING_SCORE_EXCEEDED,
             field_names.IS_TRIBAL_DAC,
+            field_names.FINAL_SCORE_N_BOOLEAN_V1_0,
         ]
 
         # For some columns, high values are "good", so we want to reverse the percentile
@@ -541,8 +565,8 @@ class ScoreETL(ExtractTransformLoad):
                 low_field_name=field_names.LOW_LIFE_EXPECTANCY_FIELD,
             ),
             ReversePercentile(
-                field_name=field_names.CENSUS_DECENNIAL_AREA_MEDIAN_INCOME_PERCENT_FIELD_2009,
-                low_field_name=field_names.LOW_CENSUS_DECENNIAL_AREA_MEDIAN_INCOME_PERCENT_FIELD_2009,
+                field_name=field_names.CENSUS_DECENNIAL_AREA_MEDIAN_INCOME_PERCENT_FIELD_2019,
+                low_field_name=field_names.LOW_CENSUS_DECENNIAL_AREA_MEDIAN_INCOME_PERCENT_FIELD_2019,
             ),
         ]
 
@@ -657,7 +681,7 @@ class ScoreETL(ExtractTransformLoad):
         df_copy[field_names.COMBINED_CENSUS_TOTAL_POPULATION_2010] = df_copy[
             [
                 field_names.TOTAL_POP_FIELD,
-                field_names.CENSUS_DECENNIAL_TOTAL_POPULATION_FIELD_2009,
+                field_names.CENSUS_DECENNIAL_TOTAL_POPULATION_FIELD_2019,
             ]
         ].mean(axis=1, skipna=True)
 

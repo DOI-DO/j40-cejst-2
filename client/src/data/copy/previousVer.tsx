@@ -1,6 +1,6 @@
 import React from 'react';
 import {FormattedDate, FormattedMessage, defineMessages} from 'gatsby-plugin-intl';
-import {METH_1_0_RELEASE_DATE, METH_BETA_RELEASE_DATE} from './common';
+import {METH_2_0_RELEASE_DATE, METH_BETA_RELEASE_DATE} from './common';
 
 export const PAGE = defineMessages({
   TITLE: {
@@ -29,7 +29,7 @@ export const CARD = {
         day="numeric"
       />,
       releaseDate: <FormattedDate
-        value={METH_1_0_RELEASE_DATE}
+        value={METH_2_0_RELEASE_DATE}
         year="numeric"
         month="short"
         day="numeric"

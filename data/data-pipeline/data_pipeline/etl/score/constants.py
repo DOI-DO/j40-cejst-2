@@ -9,6 +9,7 @@ from data_pipeline.score import field_names
 
 # Base Paths
 DATA_PATH = Path(settings.APP_ROOT) / "data"
+STATIC_DATA_PATH = Path(settings.APP_ROOT) / "content" / "static_data"
 TMP_PATH = DATA_PATH / "tmp"
 FILES_PATH = Path(settings.APP_ROOT) / "files"
 
@@ -23,6 +24,7 @@ DATA_CENSUS_DIR = DATA_PATH / "census"
 DATA_CENSUS_CSV_DIR = DATA_CENSUS_DIR / "csv"
 DATA_CENSUS_CSV_FILE_PATH = DATA_CENSUS_CSV_DIR / "us.csv"
 DATA_CENSUS_CSV_STATE_FILE_PATH = DATA_CENSUS_CSV_DIR / "fips_states_2010.csv"
+DATA_CENSUS_GEOJSON_FILE_PATH = DATA_CENSUS_DIR / "geojson" / "us.json"
 
 # Score paths
 DATA_SCORE_DIR = DATA_PATH / "score"
@@ -44,6 +46,9 @@ DATA_SCORE_JSON_INDEX_FILE_PATH = (
 
 ## Tile path
 DATA_SCORE_TILES_DIR = DATA_SCORE_DIR / "tiles"
+
+## Tiles search
+DATA_TILES_SEARCH_DIR = DATA_SCORE_DIR / "search"
 
 # Downloadable paths
 if not os.environ.get("J40_VERSION_LABEL_STRING"):
@@ -81,6 +86,7 @@ SCORE_VERSIONING_README_FILE_NAME = f"readme-version-{version_str}.md"
 SCORE_VERSIONING_README_FILE_PATH = (
     FILES_PATH / SCORE_VERSIONING_README_FILE_NAME
 )
+SCORE_TRACT_SEARCH_FILE_PATH = DATA_TILES_SEARCH_DIR / "tracts.json"
 
 # For the codebook
 CEJST_SCORE_COLUMN_NAME = "score_name"
@@ -275,6 +281,7 @@ TILES_SCORE_COLUMNS = {
     # temporarily update this so that it's the Narwhal score that gets visualized on the map
     # The NEW final score value INCLUDES the adjacency index.
     field_names.FINAL_SCORE_N_BOOLEAN: "SN_C",
+    field_names.FINAL_SCORE_N_BOOLEAN_V1_0: "SN_C_V10",
     field_names.IS_TRIBAL_DAC: "SN_T",
     field_names.DIABETES_LOW_INCOME_FIELD: "DLI",
     field_names.ASTHMA_LOW_INCOME_FIELD: "ALI",
@@ -315,18 +322,18 @@ TILES_SCORE_COLUMNS = {
     field_names.ISLAND_AREAS_POVERTY_LOW_HS_EDUCATION_FIELD: "IAPLHSE",
     field_names.ISLAND_AREAS_LOW_MEDIAN_INCOME_LOW_HS_EDUCATION_FIELD: "IALMILHSE",
     # Percentiles for Island areas' workforce columns
-    field_names.LOW_CENSUS_DECENNIAL_AREA_MEDIAN_INCOME_PERCENT_FIELD_2009
+    field_names.LOW_CENSUS_DECENNIAL_AREA_MEDIAN_INCOME_PERCENT_FIELD_2019
     + field_names.PERCENTILE_FIELD_SUFFIX: "IALMILHSE_PFS",
-    field_names.CENSUS_DECENNIAL_POVERTY_LESS_THAN_100_FPL_FIELD_2009
+    field_names.CENSUS_DECENNIAL_POVERTY_LESS_THAN_100_FPL_FIELD_2019
     + field_names.ISLAND_AREAS_PERCENTILE_ADJUSTMENT_FIELD
     + field_names.PERCENTILE_FIELD_SUFFIX: "IAPLHSE_PFS",
-    field_names.CENSUS_DECENNIAL_UNEMPLOYMENT_FIELD_2009
+    field_names.CENSUS_DECENNIAL_UNEMPLOYMENT_FIELD_2019
     + field_names.ISLAND_AREAS_PERCENTILE_ADJUSTMENT_FIELD
     + field_names.PERCENTILE_FIELD_SUFFIX: "IAULHSE_PFS",
     field_names.LOW_HS_EDUCATION_FIELD: "LHE",
     field_names.ISLAND_AREAS_LOW_HS_EDUCATION_FIELD: "IALHE",
     # Percentage of HS Degree completion for Islands
-    field_names.CENSUS_DECENNIAL_HIGH_SCHOOL_ED_FIELD_2009: "IAHSEF",
+    field_names.CENSUS_DECENNIAL_HIGH_SCHOOL_ED_FIELD_2019: "IAHSEF",
     # Booleans for the front end about the types of thresholds exceeded
     field_names.CLIMATE_THRESHOLD_EXCEEDED: "N_CLT_EOMI",
     field_names.ENERGY_THRESHOLD_EXCEEDED: "N_ENY_EOMI",

@@ -4,11 +4,15 @@ ISLAND_AREAS_PERCENTILE_ADJUSTMENT_FIELD = " for island areas"
 ADJACENT_MEAN_SUFFIX = " (based on adjacency index and low income alone)"
 ADJACENCY_INDEX_SUFFIX = " (average of neighbors)"
 ISLAND_AREA_BACKFILL_SUFFIX = " in 2009"
+V1_0_RESULTS_SUFFIX = " v1.0"
 
 # Geographic field names
 GEOID_TRACT_FIELD = "GEOID10_TRACT"
 STATE_FIELD = "State/Territory"
 COUNTY_FIELD = "County Name"
+
+# Census per-tract land area field name
+LAND_AREA_FIELD = "ALAND10"
 
 # Definition Narwhal fields
 SCORE_N_COMMUNITIES = "Definition N (communities)"
@@ -23,6 +27,10 @@ N_WORKFORCE = "Workforce Factor (Definition N)"
 N_NON_WORKFORCE = "Any Non-Workforce Factor (Definition N)"
 FINAL_SCORE_N_BOOLEAN = (
     "Definition N community, including adjacency index tracts"
+)
+FINAL_SCORE_N_BOOLEAN_V1_0 = f"{FINAL_SCORE_N_BOOLEAN}{V1_0_RESULTS_SUFFIX}"
+GRANDFATHERED_N_COMMUNITIES_V1_0 = (
+    f"Grandfathered {SCORE_N_COMMUNITIES} from v1.0"
 )
 
 PERCENTILE = 90
@@ -182,19 +190,27 @@ AGGREGATION_POPULATION_FIELD = "Population Characteristics"
 UNDER_5_FIELD = "Individuals under 5 years old"
 OVER_64_FIELD = "Individuals over 64 years old"
 
-# Fields from 2010 decennial census (generally only loaded for the territories)
-CENSUS_DECENNIAL_MEDIAN_INCOME_2009 = "Median household income in 2009 ($)"
-CENSUS_DECENNIAL_POVERTY_LESS_THAN_100_FPL_FIELD_2009 = (
-    "Percentage households below 100% of federal poverty line in 2009"
+# Fields from 2020 decennial census (generally only loaded for the territories)
+# 2010 vs 2020 WARNING
+# We must keep the old 2009 date to make it compatible with all the other 2010 data
+DEC_DATA_YEAR = "2009"
+CENSUS_DECENNIAL_MEDIAN_INCOME_2019 = (
+    f"Median household income in {DEC_DATA_YEAR} ($)"
 )
-CENSUS_DECENNIAL_HIGH_SCHOOL_ED_FIELD_2009 = "Percent individuals age 25 or over with less than high school degree in 2009"
-CENSUS_DECENNIAL_UNEMPLOYMENT_FIELD_2009 = "Unemployment (percent) in 2009"
-CENSUS_DECENNIAL_TOTAL_POPULATION_FIELD_2009 = "Total population in 2009"
-CENSUS_DECENNIAL_AREA_MEDIAN_INCOME_PERCENT_FIELD_2009 = (
-    "Median household income as a percent of territory median income in 2009"
+CENSUS_DECENNIAL_POVERTY_LESS_THAN_100_FPL_FIELD_2019 = f"Percentage households below 100% of federal poverty line in {DEC_DATA_YEAR}"
+CENSUS_DECENNIAL_POVERTY_LESS_THAN_200_FPL_FIELD_2019 = f"Percentage households below 200% of federal poverty line in {DEC_DATA_YEAR}"
+CENSUS_DECENNIAL_ADJUSTED_POVERTY_LESS_THAN_200_FPL_FIELD_2019 = f"{CENSUS_DECENNIAL_POVERTY_LESS_THAN_200_FPL_FIELD_2019}, adjusted and imputed"
+CENSUS_DECENNIAL_HIGH_SCHOOL_ED_FIELD_2019 = f"Percent individuals age 25 or over with less than high school degree in {DEC_DATA_YEAR}"
+CENSUS_DECENNIAL_UNEMPLOYMENT_FIELD_2019 = (
+    f"Unemployment (percent) in {DEC_DATA_YEAR}"
 )
-LOW_CENSUS_DECENNIAL_AREA_MEDIAN_INCOME_PERCENT_FIELD_2009 = "Low median household income as a percent of territory median income in 2009"
-# Fields from 2010 ACS (loaded for comparison with the territories)
+CENSUS_DECENNIAL_TOTAL_POPULATION_FIELD_2019 = (
+    f"Total population in {DEC_DATA_YEAR}"
+)
+CENSUS_DECENNIAL_AREA_MEDIAN_INCOME_PERCENT_FIELD_2019 = f"Median household income as a percent of territory median income in {DEC_DATA_YEAR}"
+LOW_CENSUS_DECENNIAL_AREA_MEDIAN_INCOME_PERCENT_FIELD_2019 = f"Low median household income as a percent of territory median income in {DEC_DATA_YEAR}"
+
+# # Fields from 2010 ACS (loaded for comparison with the territories)
 CENSUS_UNEMPLOYMENT_FIELD_2010 = "Unemployment (percent) in 2010"
 CENSUS_POVERTY_LESS_THAN_100_FPL_FIELD_2010 = (
     "Percent of individuals less than 100% Federal Poverty Line in 2010"
@@ -224,6 +240,10 @@ COMBINED_UNEMPLOYMENT_2010 = (
 )
 COMBINED_POVERTY_LESS_THAN_100_FPL_FIELD_2010 = (
     "Percentage households below 100% of federal poverty line in 2009 (island areas) "
+    "and 2010 (states and PR)"
+)
+COMBINED_POVERTY_LESS_THAN_200_FPL_FIELD_2010 = (
+    "Percentage households below 200% of federal poverty line in 2009 (island areas) "
     "and 2010 (states and PR)"
 )
 
@@ -691,11 +711,13 @@ LOW_MEDIAN_INCOME_PCTILE_THRESHOLD = (
     f"percent of area median income"
 )
 ISLAND_LOW_MEDIAN_INCOME_PCTILE_THRESHOLD = (
-    f"{LOW_CENSUS_DECENNIAL_AREA_MEDIAN_INCOME_PERCENT_FIELD_2009} exceeds "
+    f"{LOW_CENSUS_DECENNIAL_AREA_MEDIAN_INCOME_PERCENT_FIELD_2019} exceeds "
     f"{PERCENTILE}th percentile"
 )
-ISLAND_UNEMPLOYMENT_PCTILE_THRESHOLD = f"{CENSUS_DECENNIAL_UNEMPLOYMENT_FIELD_2009} exceeds {PERCENTILE}th percentile"
-ISLAND_POVERTY_PCTILE_THRESHOLD = f"{CENSUS_DECENNIAL_POVERTY_LESS_THAN_100_FPL_FIELD_2009} exceeds {PERCENTILE}th percentile"
+ISLAND_UNEMPLOYMENT_PCTILE_THRESHOLD = f"{CENSUS_DECENNIAL_UNEMPLOYMENT_FIELD_2019} exceeds {PERCENTILE}th percentile"
+ISLAND_POVERTY_PCTILE_THRESHOLD = f"{CENSUS_DECENNIAL_POVERTY_LESS_THAN_100_FPL_FIELD_2019} exceeds {PERCENTILE}th percentile"
+# Low Income Island Areas
+ISLAND_AREAS_IMPUTED_INCOME_FLAG_FIELD = f"Income data has been estimated based on neighbor income{ISLAND_AREAS_SUFFIX}"
 
 # Not currently used in a factor
 EXTREME_HEAT_MEDIAN_HOUSE_VALUE_LOW_INCOME_FIELD = (
