@@ -128,3 +128,30 @@ def test_mark_poverty_flag():
     assert not test_data[~expected_low_income_filter][
         field_names.FPL_200_SERIES_IMPUTED_AND_ADJUSTED
     ].all()
+
+
+def test_mark_grandfathered_dacs():
+    data = {
+        field_names.GEOID_TRACT_FIELD: [
+            "78010971500",
+            "78010970500",
+            "66010954400",
+            "66010953400",
+        ],
+        field_names.FINAL_SCORE_N_BOOLEAN_V1_0: [False, False, True, True],
+        field_names.FINAL_SCORE_N_BOOLEAN: [False, True, False, True],
+    }
+    test_df = pd.DataFrame(data)
+    scorer = ScoreNarwhal(test_df)
+    scorer._mark_grandfathered_dacs()
+    result = scorer.df
+    assert field_names.GRANDFATHERED_N_COMMUNITIES_V1_0 in result.columns
+    assert not result[field_names.GRANDFATHERED_N_COMMUNITIES_V1_0][0]
+    assert not result[field_names.GRANDFATHERED_N_COMMUNITIES_V1_0][1]
+    assert result[field_names.GRANDFATHERED_N_COMMUNITIES_V1_0][2]
+    assert not result[field_names.GRANDFATHERED_N_COMMUNITIES_V1_0][3]
+
+    assert not result[field_names.FINAL_SCORE_N_BOOLEAN][0]
+    assert result[field_names.FINAL_SCORE_N_BOOLEAN][1]
+    assert result[field_names.FINAL_SCORE_N_BOOLEAN][2]
+    assert result[field_names.FINAL_SCORE_N_BOOLEAN][3]

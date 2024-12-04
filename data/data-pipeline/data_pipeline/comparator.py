@@ -6,6 +6,7 @@ from pathlib import Path
 from data_pipeline.etl.score import constants
 from data_pipeline.utils import get_module_logger, download_file_from_url
 from data_pipeline.application import log_title, log_info, log_goodbye
+from data_pipeline.score import field_names
 
 logger = get_module_logger(__name__)
 
@@ -176,6 +177,7 @@ def compare_score(
     production_row_count = len(production_score_df.index)
     local_row_count = len(local_score_df.index)
 
+    # Tract comparison
     _add_text(
         f"* The production score has {production_row_count:,} census tracts, and the freshly calculated score has {local_row_count:,}."
     )
@@ -191,8 +193,11 @@ def compare_score(
             "\n"
         )
 
-    production_total_population = production_score_df["Total population"].sum()
-    local_total_population = local_score_df["Total population"].sum()
+    # Population comparison
+    production_total_population = production_score_df[
+        field_names.TOTAL_POP_FIELD
+    ].sum()
+    local_total_population = local_score_df[field_names.TOTAL_POP_FIELD].sum()
 
     _add_text(
         f"* The total population in all census tracts in the production score is {production_total_population:,}. "
@@ -204,12 +209,9 @@ def compare_score(
         else f"The difference is {abs(production_total_population - local_total_population):,}.\n"
     )
 
-    production_disadvantaged_tracts_df = production_score_df.query(
-        "`Definition N community, including adjacency index tracts` == True"
-    )
-    local_disadvantaged_tracts_df = local_score_df.query(
-        "`Definition N community, including adjacency index tracts` == True"
-    )
+    dacs_query = f"`{field_names.FINAL_SCORE_N_BOOLEAN}` == True"
+    production_disadvantaged_tracts_df = production_score_df.query(dacs_query)
+    local_disadvantaged_tracts_df = local_score_df.query(dacs_query)
 
     production_disadvantaged_tracts_set = set(
         production_disadvantaged_tracts_df.index.array
@@ -219,14 +221,15 @@ def compare_score(
     )
 
     production_pct_of_population_represented = (
-        production_disadvantaged_tracts_df["Total population"].sum()
+        production_disadvantaged_tracts_df[field_names.TOTAL_POP_FIELD].sum()
         / production_total_population
     )
     local_pct_of_population_represented = (
-        local_disadvantaged_tracts_df["Total population"].sum()
+        local_disadvantaged_tracts_df[field_names.TOTAL_POP_FIELD].sum()
         / local_total_population
     )
 
+    # DACS comparison
     _add_text(
         f"* There are {len(production_disadvantaged_tracts_set):,} disadvantaged tracts in the production score representing"
         f" {production_pct_of_population_represented:.1%} of the total population, and {len(local_disadvantaged_tracts_set):,}"
@@ -252,14 +255,26 @@ def compare_score(
         f" generated score (i.e. disadvantaged tracts that were removed by the new score). "
     )
     if len(removed_tracts) > 0:
-        _add_text(f"Those tracts are:\n{removed_tracts}\n")
+        _add_text(f"Those tracts are:\n{removed_tracts}")
 
     _add_text(
-        f"* There are {len(added_tracts):,} tract(s) marked as disadvantaged in the locally generated score that are not disadvantaged in the"
+        f"\n* There are {len(added_tracts):,} tract(s) marked as disadvantaged in the locally generated score that are not disadvantaged in the"
         f" production score (i.e. disadvantaged tracts that were added by the new score). "
     )
     if len(added_tracts) > 0:
         _add_text(f"Those tracts are:\n{added_tracts}\n")
+
+    # Grandfathered tracts from v1.0
+    grandfathered_tracts = local_score_df.loc[
+        local_score_df[field_names.GRANDFATHERED_N_COMMUNITIES_V1_0]
+    ].index
+    if len(grandfathered_tracts) > 0:
+        _add_text(
+            f"* This includes {len(grandfathered_tracts)} grandfathered tract(s) from v1.0 scoring. They are:\n"
+            f"{grandfathered_tracts.to_list()}\n"
+        )
+    else:
+        _add_text("* There are NO grandfathered tracts from v1.0 scoring.\n")
 
     ################
     # Create a delta

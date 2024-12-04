@@ -80,11 +80,11 @@ def test_create_score_data(
     )
 
 
-def test_create_tile_data(etl, score_data_expected, tile_data_expected):
-    output_tiles_df_actual = etl._create_tile_data(score_data_expected)
+def test_create_tile_data(etl, create_tile_score_data_input, create_tile_data_expected):
+    output_tiles_df_actual = etl._create_tile_data(create_tile_score_data_input)
     pdt.assert_frame_equal(
         output_tiles_df_actual,
-        tile_data_expected,
+        create_tile_data_expected,
     )
 
 

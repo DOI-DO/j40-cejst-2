@@ -130,6 +130,16 @@ def tile_data_expected():
 
 
 @pytest.fixture()
+def create_tile_score_data_input():
+    return pd.read_pickle(pytest.SNAPSHOT_DIR / "create_tile_score_data_input.pkl")
+
+
+@pytest.fixture()
+def create_tile_data_expected():
+    return pd.read_pickle(pytest.SNAPSHOT_DIR / "create_tile_data_expected.pkl")
+
+
+@pytest.fixture()
 def downloadable_data_expected():
     return pd.read_pickle(
         pytest.SNAPSHOT_DIR / "downloadable_data_expected.pkl"

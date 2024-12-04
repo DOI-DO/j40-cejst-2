@@ -9,6 +9,7 @@ from data_pipeline.score import field_names
 
 # Base Paths
 DATA_PATH = Path(settings.APP_ROOT) / "data"
+STATIC_DATA_PATH = Path(settings.APP_ROOT) / "content" / "static_data"
 TMP_PATH = DATA_PATH / "tmp"
 FILES_PATH = Path(settings.APP_ROOT) / "files"
 
@@ -275,6 +276,7 @@ TILES_SCORE_COLUMNS = {
     # temporarily update this so that it's the Narwhal score that gets visualized on the map
     # The NEW final score value INCLUDES the adjacency index.
     field_names.FINAL_SCORE_N_BOOLEAN: "SN_C",
+    field_names.FINAL_SCORE_N_BOOLEAN_V1_0: "SN_C_V10",
     field_names.IS_TRIBAL_DAC: "SN_T",
     field_names.DIABETES_LOW_INCOME_FIELD: "DLI",
     field_names.ASTHMA_LOW_INCOME_FIELD: "ALI",

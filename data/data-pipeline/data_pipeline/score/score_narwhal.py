@@ -1024,6 +1024,20 @@ class ScoreNarwhal(Score):
             self.df[field_names.SCORE_N_COMMUNITIES],
         )
 
+    def _mark_grandfathered_dacs(self) -> None:
+        """Territory tracts that are flagged as DACS in the V1.0 score are also marked."""
+        self.df[field_names.GRANDFATHERED_N_COMMUNITIES_V1_0] = np.where(
+            self.df[field_names.FINAL_SCORE_N_BOOLEAN_V1_0]
+            & ~self.df[field_names.FINAL_SCORE_N_BOOLEAN],
+            True,
+            False,
+        )
+        self.df[field_names.FINAL_SCORE_N_BOOLEAN] = np.where(
+            self.df[field_names.FINAL_SCORE_N_BOOLEAN_V1_0],
+            True,
+            self.df[field_names.FINAL_SCORE_N_BOOLEAN],
+        )
+
     def _mark_poverty_flag(self) -> None:
         """Combine poverty less than 200% for territories and update the income flag."""
         # First we set the low income flag for non-territories by themselves, this
@@ -1111,6 +1125,7 @@ class ScoreNarwhal(Score):
         ] = self.df[field_names.SCORE_N_COMMUNITIES].astype(int)
 
         self._mark_donut_hole_tracts()
+        self._mark_grandfathered_dacs()
         self.df[
             field_names.PERCENT_OF_TRACT_IS_DAC
         ] = self._get_percent_of_tract_that_is_dac()

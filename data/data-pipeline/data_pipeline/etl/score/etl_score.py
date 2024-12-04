@@ -54,6 +54,7 @@ class ScoreETL(ExtractTransformLoad):
         self.eamlis_df: pd.DataFrame
         self.fuds_df: pd.DataFrame
         self.tribal_overlap_df: pd.DataFrame
+        self.v1_0_score_results_df: pd.DataFrame
 
         self.ISLAND_DEMOGRAPHIC_BACKFILL_FIELDS: List[str] = []
 
@@ -203,6 +204,22 @@ class ScoreETL(ExtractTransformLoad):
             dtype={self.GEOID_TRACT_FIELD_NAME: "string"},
             low_memory=False,
             header=None,
+        )
+
+        # Load v1.0 score results for grandfathering purposes
+        score_v1_0_csv = (
+            constants.STATIC_DATA_PATH / "v1.0-score-results-usa.csv"
+        )
+        self.v1_0_score_results_df = pd.read_csv(
+            score_v1_0_csv,
+            dtype={self.GEOID_TRACT_FIELD_NAME: "string"},
+            low_memory=False,
+        )
+        self.v1_0_score_results_df.rename(
+            columns={
+                field_names.FINAL_SCORE_N_BOOLEAN: field_names.FINAL_SCORE_N_BOOLEAN_V1_0,
+            },
+            inplace=True,
         )
 
     def _join_tract_dfs(self, census_tract_dfs: list) -> pd.DataFrame:
@@ -364,6 +381,7 @@ class ScoreETL(ExtractTransformLoad):
             self.eamlis_df,
             self.fuds_df,
             self.tribal_overlap_df,
+            self.v1_0_score_results_df,
         ]
 
         # Sanity check each data frame before merging.
@@ -514,6 +532,7 @@ class ScoreETL(ExtractTransformLoad):
             field_names.ELIGIBLE_FUDS_BINARY_FIELD_NAME,
             field_names.HISTORIC_REDLINING_SCORE_EXCEEDED,
             field_names.IS_TRIBAL_DAC,
+            field_names.FINAL_SCORE_N_BOOLEAN_V1_0,
         ]
 
         # For some columns, high values are "good", so we want to reverse the percentile

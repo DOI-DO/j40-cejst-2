@@ -4,6 +4,7 @@ ISLAND_AREAS_PERCENTILE_ADJUSTMENT_FIELD = " for island areas"
 ADJACENT_MEAN_SUFFIX = " (based on adjacency index and low income alone)"
 ADJACENCY_INDEX_SUFFIX = " (average of neighbors)"
 ISLAND_AREA_BACKFILL_SUFFIX = " in 2009"
+V1_0_RESULTS_SUFFIX = " v1.0"
 
 # Geographic field names
 GEOID_TRACT_FIELD = "GEOID10_TRACT"
@@ -26,6 +27,10 @@ N_WORKFORCE = "Workforce Factor (Definition N)"
 N_NON_WORKFORCE = "Any Non-Workforce Factor (Definition N)"
 FINAL_SCORE_N_BOOLEAN = (
     "Definition N community, including adjacency index tracts"
+)
+FINAL_SCORE_N_BOOLEAN_V1_0 = f"{FINAL_SCORE_N_BOOLEAN}{V1_0_RESULTS_SUFFIX}"
+GRANDFATHERED_N_COMMUNITIES_V1_0 = (
+    f"Grandfathered {SCORE_N_COMMUNITIES} from v1.0"
 )
 
 PERCENTILE = 90
