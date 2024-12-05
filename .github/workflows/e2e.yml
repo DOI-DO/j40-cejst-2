@@ -17,9 +17,9 @@ jobs:
       working-directory: ./client
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Cypress nightly tests 🌃
-        uses: cypress-io/github-action@v2
+        uses: cypress-io/github-action@v6
         with:
           working-directory: ${{env.working-directory}}
           start: npm start
