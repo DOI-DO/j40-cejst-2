@@ -63,8 +63,27 @@ to testing the frontend with that data at the staging URL.
 
 ## Release day
 
-When the 2.0 CEJST is ready to release to the public, we can change the
-screeningtool.geoplatform.gov domain name to point to the new frontend
-Cloudfront distribution instead of the one that it currently goes to. With
-this one change, after the DNS change propagates, users online will see the
-new frontend website which is configured to display the new backend data.
+Instead of changing screeningtool.geoplatform.gov DNS, we are going
+to deploy using AWS Console changes that we can directly control.
+screeningtool.geoplatform.gov is going to point to the exact same Cloudfront
+distribution throughout. We are going to accomplish the deployment by
+switching that Cloudfront distribution to point to a different S3 bucket.
+
+Here are the steps to make that change:
+
+  1. Go to the production Cloudfront distribution
+     https://us-east-1.console.aws.amazon.com/cloudfront/v4/home?region=us-east-1#/distributions/ED03LPVC4OXSW
+  2. Go to the "Origins" tab
+  3. Click "Create origin" to add a new origin to that CloudFront distribution
+  4. For the "Origin domain" choose the new bucket
+     ceq-cejst-2-website.s3.us-east-1.amazonaws.com
+  5. For "Origin path" use /justice40-tool/main. The rest of the options can
+     be left at their defaults.
+  6. Go to the "Behaviors" tab. Choose to "Edit" the "Default" behavior.
+  7. Under the dropdown for "Origin and origin groups" choose the origin you
+     just created. Click "Save".
+  8. Go to the "Invalidations" tab. Click "Create invalidation". Use and
+     object path of "/*". Click "Create" and wait for the status to change to
+     "Completed".
+  9. Wait up to a few minutes for the changes to make it to all the CloudFront
+     edge locations.
