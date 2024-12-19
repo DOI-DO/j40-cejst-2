@@ -87,3 +87,10 @@ Here are the steps to make that change:
      "Completed".
   9. Wait up to a few minutes for the changes to make it to all the CloudFront
      edge locations.
+
+### Rollback
+
+To abort or undo the v2 deployment, we need to set the above cloudfront
+distribution back to the same origin that it started with. Under "Behaviors",
+switch the default behavior back to its original value under "Origin and
+origin groups".
