@@ -15,7 +15,7 @@ on:
         description: 'Ping Check'
 jobs:
   check_site_uptime:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     environment: Staging
     name: Ping the site
     steps:

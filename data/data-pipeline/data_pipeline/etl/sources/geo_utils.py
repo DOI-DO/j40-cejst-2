@@ -84,6 +84,6 @@ def add_tracts_for_geometries(
         df,
         tract_data[["GEOID10_TRACT", "geometry"]],
         how="inner",
-        op="intersects",
+        predicate="intersects",
     )
     return df

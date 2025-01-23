@@ -11,7 +11,6 @@ import J40MainGridContainer from '../components/J40MainGridContainer';
 import Layout from '../components/layout';
 import SubPageNav from '../components/SubPageNav';
 
-import {GITHUB_LINK, GITHUB_LINK_ES} from '../constants';
 import {DATA_SURVEY_LINKS, PAGES_ENDPOINTS, USWDS_BREAKPOINTS} from '../data/constants';
 import * as ABOUT_COPY from '../data/copy/about';
 import {FEEDBACK_EMAIL} from '../data/copy/common';
@@ -20,8 +19,6 @@ import {FEEDBACK_EMAIL} from '../data/copy/common';
 import commentIcon from // @ts-ignore
   '/node_modules/uswds/dist/img/usa-icons/comment.svg';
 
-import githubIcon from // @ts-ignore
-  '/node_modules/uswds/dist/img/usa-icons/github.svg';
 
 interface IAboutPageProps {
   location: Location;
@@ -113,19 +110,9 @@ const AboutPage = ({location}: IAboutPageProps) => {
             </p>
           </AboutCard>
 
-          <AboutCard
-            size={'small'}
-            imgSrc={githubIcon}
-            header={intl.formatMessage(ABOUT_COPY.GET_INVOLVED.JOIN_OSC_HEADING)}
-            linkText={intl.formatMessage(ABOUT_COPY.GET_INVOLVED.JOIN_OSC_LINK_TEXT)}
-            linkTag={intl.formatMessage(ABOUT_COPY.GET_INVOLVED.JOIN_OSC_LINK_TAG)}
-            url={intl.locale === 'es' ? GITHUB_LINK_ES : GITHUB_LINK}
-            openUrlNewTab={true}
-            internal={false}>
-            <p>
-              {intl.formatMessage(ABOUT_COPY.GET_INVOLVED.JOIN_OSC_INFO)}
-            </p>
-          </AboutCard>
+          <div className='grid-gap-lg tablet:grid-col'>
+            {/* spacer */}
+          </div>
         </AboutCardsContainer>
 
         <Grid col={12} tablet={{col: 8}}>

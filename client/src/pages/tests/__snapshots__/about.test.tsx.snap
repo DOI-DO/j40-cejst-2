@@ -161,24 +161,11 @@ exports[`rendering of the DatasetContainer checks if various text fields are vis
       </div>
     </div>
     <div>
-      <div
-        class="usa-alert usa-alert--info"
-        data-testid="alert"
-      >
-        <div
-          class="usa-alert__body"
-        >
-          <h1
-            class="usa-alert__heading"
-          >
-            Version 2.0 of the tool is now available
-          </h1>
-          <p
-            class="usa-alert__text"
-          >
-            The Council on Environmental Quality (CEQ) made the 2.0 version of the tool available on Dec 20, 2024.
-          </p>
-        </div>
+      <div>
+        <strong>
+          This tool has been updated.
+        </strong>
+         The 2.0 version of the tool was released on Dec 20, 2024.
       </div>
     </div>
     <div
@@ -571,69 +558,7 @@ exports[`rendering of the DatasetContainer checks if various text fields are vis
         </div>
         <div
           class="grid-gap-lg tablet:grid-col"
-          data-testid="grid"
-        >
-          <div
-            class="grid-row j40-aboutcard-sm-card"
-            data-testid="grid"
-          >
-            <div
-              class="tablet:grid-col-2 j40-aboutpage-image-container"
-              data-testid="grid"
-            >
-              <img
-                alt="Join the open source community"
-                class="j40-aboutcard-image"
-                src="test-file-stub"
-              />
-            </div>
-            <div
-              class="tablet:grid-col-9"
-              data-cy="join-the-open-source-community-block"
-              data-testid="grid"
-            >
-              <div
-                class="grid-row"
-                data-testid="grid"
-              >
-                <h3>
-                  Join the open source community
-                </h3>
-                <p>
-                  
-      The tool’s code is open source, which means it is available for the public to view and contribute to it.
-    
-                </p>
-                <div
-                  class="j40-aboutcard-sm-link"
-                >
-                  <a
-                    class="usa-link usa-link--external"
-                    data-cy=""
-                    href="https://github.com/DOI-DO/ceq-j40-cejst-2"
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    Check it out on GitHub
-                  </a>
-                   
-                  <span
-                    class="usa-tag  "
-                    data-testid="tag"
-                  >
-                    New Location
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div
-              class="grid-col-1"
-              data-testid="grid"
-            >
-               
-            </div>
-          </div>
-        </div>
+        />
       </div>
       <div
         class="grid-col-12 tablet:grid-col-8"
@@ -793,41 +718,6 @@ exports[`rendering of the DatasetContainer checks if various text fields are vis
                   >
                     Find a contact at USA.gov
                   </a>
-                </li>
-              </ul>
-            </section>
-          </div>
-          <div
-            class="mobile-lg:grid-col-12 desktop:grid-col-4"
-          >
-            <section>
-              <div
-                class="j40-h4"
-              >
-                Want to contribute?
-              </div>
-              <ul
-                class="usa-list usa-list--unstyled"
-              >
-                <li
-                  class="usa-footer__secondary-link"
-                >
-                  <a
-                    class="usa-link usa-link--external footer-link-first-child"
-                    data-cy="check-out-the-code-on-github"
-                    href="https://github.com/DOI-DO/ceq-j40-cejst-2"
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    Check out the code on GitHub
-                  </a>
-                   
-                  <span
-                    class="usa-tag  "
-                    data-testid="tag"
-                  >
-                    New Location
-                  </span>
                 </li>
               </ul>
             </section>

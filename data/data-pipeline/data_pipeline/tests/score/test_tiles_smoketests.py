@@ -8,11 +8,6 @@ import pandas as pd
 import pytest
 from data_pipeline.config import settings
 from data_pipeline.etl.score import constants
-from data_pipeline.etl.score.constants import THRESHOLD_COUNT_TO_SHOW_FIELD_NAME
-from data_pipeline.etl.score.constants import TILES_SCORE_COLUMNS
-from data_pipeline.etl.score.constants import (
-    USER_INTERFACE_EXPERIENCE_FIELD_NAME,
-)
 from data_pipeline.score import field_names
 
 from .fixtures import final_score_df  # pylint: disable=unused-import
@@ -22,10 +17,8 @@ pytestmark = pytest.mark.smoketest
 
 @pytest.fixture
 def tiles_df(scope="session"):
-    return pd.read_csv(
-        settings.APP_ROOT / "data" / "score" / "csv" / "tiles" / "usa.csv",
-        dtype={"GTF": str},
-        low_memory=False,
+    return pd.read_parquet(
+        constants.DATA_SCORE_CSV_TILES_FILE_PATH,
     )
 
 
@@ -73,7 +66,6 @@ def test_percentiles(tiles_df):
         assert (tiles_df[col].median() >= 0.4) & (
             tiles_df[col].median() <= 0.6
         ), f"Percentile distribution for {col} is decidedly not uniform"
-    return True
 
 
 def test_count_of_fips_codes(tiles_df, final_score_df):
@@ -91,19 +83,19 @@ def test_count_of_fips_codes(tiles_df, final_score_df):
 
 
 def test_column_presence(tiles_df):
-    expected_column_names = set(TILES_SCORE_COLUMNS.values()) | {
-        THRESHOLD_COUNT_TO_SHOW_FIELD_NAME,
-        USER_INTERFACE_EXPERIENCE_FIELD_NAME,
+    expected_column_names = set(constants.TILES_SCORE_COLUMNS.values()) | {
+        constants.THRESHOLD_COUNT_TO_SHOW_FIELD_NAME,
+        constants.USER_INTERFACE_EXPERIENCE_FIELD_NAME,
     }
     actual_column_names = set(tiles_df.columns)
     extra_columns = actual_column_names - expected_column_names
     missing_columns = expected_column_names - expected_column_names
     assert not (
         extra_columns
-    ), f"tiles/usa.csv has columns not specified in TILE_SCORE_COLUMNS: {extra_columns}"
+    ), f"tiles score has columns not specified in TILE_SCORE_COLUMNS: {extra_columns}"
     assert not (
         missing_columns
-    ), f"tiles/usa.csv is missing columns from TILE_SCORE_COLUMNS: {missing_columns}"
+    ), f"tiles score is missing columns from TILE_SCORE_COLUMNS: {missing_columns}"
 
 
 def test_tract_equality(tiles_df, final_score_df):
@@ -189,12 +181,17 @@ def test_for_column_fidelitiy_from_score(tiles_df, final_score_df):
     #   every tile column
     #   * Because tiles use rounded floats, we use close with a tolerance
     assert (
-        set(TILES_SCORE_COLUMNS.values()) - set(tiles_df.columns) == set()
+        set(constants.TILES_SCORE_COLUMNS.values()) - set(tiles_df.columns)
+        == set()
     ), "Some TILES_SCORE_COLUMNS are missing from the tiles dataframe"
 
     # Keep only the tiles score columns in the final score data
-    final_score_df = final_score_df.rename(columns=TILES_SCORE_COLUMNS).drop(
-        final_score_df.columns.difference(TILES_SCORE_COLUMNS.values()),
+    final_score_df = final_score_df.rename(
+        columns=constants.TILES_SCORE_COLUMNS
+    ).drop(
+        final_score_df.columns.difference(
+            constants.TILES_SCORE_COLUMNS.values()
+        ),
         axis=1,
         errors="ignore",
     )
@@ -227,7 +224,7 @@ def test_for_column_fidelitiy_from_score(tiles_df, final_score_df):
     assert not errors, error_message
 
 
-def test_for_geojson_fidelity_from_tiles_csv(tiles_df, tiles_geojson_df):
+def test_for_geojson_fidelity_from_tiles_score(tiles_df, tiles_geojson_df):
     tiles_geojson_df = tiles_geojson_df.drop(columns=["geometry"]).rename(
         columns={"GEOID10": "GTF"}
     )
@@ -252,11 +249,11 @@ def test_for_geojson_fidelity_from_tiles_csv(tiles_df, tiles_geojson_df):
         tiles_geojson_df[col_name] = tiles_df[col_name].replace({None: np.nan})
         error_message = f"Column {col_name} not equal "
         # For non-numeric types, we can use the built-in equals from pandas
-        if tiles_df[col_name].dtype in [
-            np.dtype(object),
-            np.dtype(bool),
-            np.dtype(str),
-        ]:
+        if (
+            pd.api.types.is_bool_dtype(tiles_df[col_name])
+            or pd.api.types.is_object_dtype(tiles_df[col_name])
+            or pd.api.types.is_string_dtype(tiles_df[col_name])
+        ):
             assert tiles_df[col_name].equals(
                 tiles_geojson_df[col_name]
             ), error_message

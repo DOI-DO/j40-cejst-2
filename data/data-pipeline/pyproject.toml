@@ -20,7 +20,7 @@ CensusData = "^1.13"
 certifi = ">= 2024.07.04" # Due to https://data.safetycli.com/v/72083/f17
 click = "8.0.4"  # pinning for now per https://github.com/psf/black/issues/2964
 dynaconf = "^3.1.4"
-geopandas = "^0.11.0"
+geopandas = "^1.0.1"
 ipdb = "^0.13.9"
 ipython = "^8.11.0"
 jupyter = "^1.0.0"
@@ -40,7 +40,7 @@ us = "^2.0.2"
 xlsxwriter = "^2.0.0"
 pydantic = "^1.9.0"
 Rtree = "^1.0.0"
-fiona = "~1.8.21"
+fiona = "^1.10.1"
 tenacity = ">=5.0.2"
 pyarrow = "^18.1.0"
 

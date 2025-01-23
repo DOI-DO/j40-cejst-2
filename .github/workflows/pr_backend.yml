@@ -11,7 +11,7 @@ jobs:
   # JOB to run change detection
   detect-be-changes:
     name: Detect backend changes
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     # Required permissions
     permissions:
       pull-requests: read
@@ -130,8 +130,7 @@ jobs:
       - name: Generate Score Geo
         run: |
           poetry run python3 -m data_pipeline.application geo-score
-      - name: Run smoketest for 1.0
-        if: ${{ env.J40_VERSION_LABEL_STRING == '1.0' }}
+      - name: Run smoketests
         run: |
           poetry run pytest data_pipeline/ -m smoketest
       - name: Set timezone for tippecanoe

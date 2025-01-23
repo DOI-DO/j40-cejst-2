@@ -442,15 +442,14 @@ class PostScoreETL(ExtractTransformLoad):
             self.input_census_geo_df
         )
 
-    def _load_score_csv_full(
-        self, score_county_state_merged: pd.DataFrame, score_csv_path: Path
+    def _load_score_full(
+        self, score_county_state_merged: pd.DataFrame, score_path: Path
     ) -> None:
         logger.debug("Saving Full Score CSV with County Information")
-        score_csv_path.parent.mkdir(parents=True, exist_ok=True)
-        score_county_state_merged.to_csv(
-            score_csv_path,
+        score_path.parent.mkdir(parents=True, exist_ok=True)
+        score_county_state_merged.to_parquet(
+            score_path,
             index=False,
-            encoding="utf-8-sig",  # windows compat https://stackoverflow.com/a/43684587
         )
 
     def _load_excel_from_df(
@@ -514,12 +513,12 @@ class PostScoreETL(ExtractTransformLoad):
 
         return excel_csv_config
 
-    def _load_tile_csv(
+    def _load_tile_score(
         self, score_tiles_df: pd.DataFrame, tile_score_path: Path
     ) -> None:
-        logger.debug("Saving Tile Score CSV")
+        logger.debug("Saving Tile Score")
         tile_score_path.parent.mkdir(parents=True, exist_ok=True)
-        score_tiles_df.to_csv(tile_score_path, index=False, encoding="utf-8")
+        score_tiles_df.to_parquet(tile_score_path, index=False)
 
     def _load_downloadable_zip(self, downloadable_info_path: Path) -> None:
         downloadable_info_path.mkdir(parents=True, exist_ok=True)
@@ -631,11 +630,11 @@ class PostScoreETL(ExtractTransformLoad):
         self.output_tract_search_df.to_json(output_path, orient="records")
 
     def load(self) -> None:
-        self._load_score_csv_full(
+        self._load_score_full(
             self.output_score_county_state_merged_df,
             constants.FULL_SCORE_CSV_FULL_PLUS_COUNTIES_FILE_PATH,
         )
-        self._load_tile_csv(
+        self._load_tile_score(
             self.output_score_tiles_df, constants.DATA_SCORE_CSV_TILES_FILE_PATH
         )
         self._load_search_tract_data(constants.SCORE_TRACT_SEARCH_FILE_PATH)

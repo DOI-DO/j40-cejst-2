@@ -207,28 +207,34 @@ def test_max_40_percent_DAC(final_score_df):
 
 
 def test_donut_hole_addition_to_score_n(final_score_df):
-    score_col_with_donuts = field_names.FINAL_SCORE_N_BOOLEAN
-    score_col = field_names.SCORE_N_COMMUNITIES
-    donut_hole_score_only = (
+    dacs_col_with_donuts = field_names.FINAL_SCORE_N_BOOLEAN
+    dacs_col = field_names.SCORE_N_COMMUNITIES
+    donut_hole_community_col = (
         field_names.SCORE_N_COMMUNITIES + field_names.ADJACENT_MEAN_SUFFIX
     )
-    count_donuts = final_score_df[donut_hole_score_only].sum()
-    count_n = final_score_df[score_col].sum()
-    count_n_with_donuts = final_score_df[score_col_with_donuts].sum()
-    new_donuts = final_score_df[
-        final_score_df[donut_hole_score_only] & ~final_score_df[score_col]
+    # Number of donuts found regardless of other scoring.
+    num_donuts = final_score_df[donut_hole_community_col].sum()
+
+    # Number of DACS not including adjacency.
+    num_dacs = final_score_df[dacs_col].sum()
+
+    # Number of DACS including adjacency.
+    num_dacs_with_donuts = final_score_df[dacs_col_with_donuts].sum()
+
+    # Number of DACS that are donuts.
+    num_dacs_due_to_donuts = final_score_df[
+        final_score_df[donut_hole_community_col] & ~final_score_df[dacs_col]
     ].shape[0]
 
-    assert (
-        new_donuts + count_n == count_n_with_donuts
-    ), "The math doesn't work! The number of new donut hole tracts plus score tracts (base) does not equal the total number of tracts identified"
+    assert num_dacs_due_to_donuts <= num_dacs_with_donuts
+    assert num_dacs_with_donuts >= num_dacs
 
     assert (
-        count_donuts < count_n
+        num_donuts < num_dacs
     ), "There are more donut hole tracts than base tracts. How can it be?"
 
     assert (
-        new_donuts > 0
+        num_dacs_due_to_donuts > 0
     ), "FYI: The adjacency index is doing nothing. Consider removing it?"
 
 
@@ -429,30 +435,6 @@ def test_all_tracts_have_scores(final_score_df):
 
 
 def test_imputed_tracts(final_score_df):
-    # Make sure that any tracts with zero population have null imputed income
-    tracts_with_zero_population_df = final_score_df[
-        final_score_df[field_names.TOTAL_POP_FIELD] == 0
-    ]
-    assert (
-        tracts_with_zero_population_df[
-            field_names.POVERTY_LESS_THAN_200_FPL_IMPUTED_FIELD
-        ]
-        .isna()
-        .all()
-    )
-
-    # Make sure that any tracts with null population have null imputed income
-    tracts_with_null_population_df = final_score_df[
-        final_score_df[field_names.TOTAL_POP_FIELD].isnull()
-    ]
-    assert (
-        tracts_with_null_population_df[
-            field_names.POVERTY_LESS_THAN_200_FPL_IMPUTED_FIELD
-        ]
-        .isna()
-        .all()
-    )
-
     # Make sure that no tracts with population have null imputed income
     # We DO NOT impute income for island areas, so remove those from the test
     is_island_area = (

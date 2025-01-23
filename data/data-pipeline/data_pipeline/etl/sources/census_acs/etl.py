@@ -970,9 +970,8 @@ class CensusACSETL(ExtractTransformLoad):
                 # Then the imputed field should have no nulls
                 self.ADJUSTED_AND_IMPUTED_POVERTY_LESS_THAN_200_PERCENT_FPL_FIELD_NAME
             ]
-            .isna()
-            .sum()
-            == 0
+            .notna()
+            .all()
         ), "Error: not all values were filled..."
 
         logger.debug("Renaming columns...")

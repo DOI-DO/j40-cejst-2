@@ -35,7 +35,6 @@ class GeoScoreETL(ExtractTransformLoad):
         self.SCORE_SHP_FILE = self.SCORE_SHP_PATH / "usa.shp"
 
         self.SCORE_CSV_PATH = self.DATA_PATH / "score" / "csv"
-        self.TILE_SCORE_CSV = self.SCORE_CSV_PATH / "tiles" / "usa.csv"
 
         self.CENSUS_USA_GEOJSON = constants.DATA_CENSUS_GEOJSON_FILE_PATH
 
@@ -100,13 +99,9 @@ class GeoScoreETL(ExtractTransformLoad):
             full_geojson_usa_df[self.LAND_FIELD_NAME] > 0
         ]
 
-        logger.info("Reading tile score CSV")
-        self.score_usa_df = pd.read_csv(
-            self.TILE_SCORE_CSV,
-            dtype={
-                self.TRACT_SHORT_FIELD: str,
-            },
-            low_memory=False,
+        logger.info("Reading tile score")
+        self.score_usa_df = pd.read_parquet(
+            constants.DATA_SCORE_CSV_TILES_FILE_PATH,
         )
 
     def transform(self) -> None:

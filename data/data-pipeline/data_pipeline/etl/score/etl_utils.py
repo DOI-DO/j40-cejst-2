@@ -43,17 +43,17 @@ def check_score_data_source(
         settings.AWS_JUSTICE40_DATAPIPELINE_URL
         + "/data/score/csv/tiles/usa.csv"
     )
-    TILE_SCORE_CSV = score_csv_data_path / "tiles" / "usa.csv"
+    TILE_SCORE_FILE = constants.DATA_SCORE_CSV_TILES_FILE_PATH
 
     # download from s3 if census_data_source is aws
     if score_data_source == "aws":
         logger.debug("Fetching Score Tile data from AWS S3")
         Downloader.download_file_from_url(
-            file_url=TILE_SCORE_CSV_S3_URL, download_file_name=TILE_SCORE_CSV
+            file_url=TILE_SCORE_CSV_S3_URL, download_file_name=TILE_SCORE_FILE
         )
     else:
         # check if score data is found locally
-        if not os.path.isfile(TILE_SCORE_CSV):
+        if not os.path.isfile(TILE_SCORE_FILE):
             logger.warning(
                 "No local score tiles data found. Please use '-s aws` to fetch from AWS"
             )

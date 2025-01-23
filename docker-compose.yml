@@ -20,14 +20,17 @@ services:
   j40_score_server:
     image: j40_score_server
     container_name: j40_score_server_1
-    build: data/data-serve/.
+    build: data/data-serve
     volumes:
       - ./data/data-pipeline/data_pipeline/data/score:/data/data-pipeline/data_pipeline/data/score
       - ./data/data-pipeline/data_pipeline/data/tribal:/data/data-pipeline/data_pipeline/data/tribal
     ports:
-      - 5000:8080
+      - 5080:8080
     environment:
       TZ: America/Los_Angeles
+    depends_on:
+      score:
+        condition: service_completed_successfully
 
   #The j40_website service runs the web app / map / site
   j40_website:
@@ -44,4 +47,5 @@ services:
     ports:
       - 8000:6000
     depends_on:
-      - "j40_score_server"
+      j40_score_server:
+        condition: service_started

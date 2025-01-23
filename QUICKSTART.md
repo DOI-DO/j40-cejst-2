@@ -12,7 +12,7 @@ $ cd j40-cejst-2
 
 Install [`docker`](https://docs.docker.com/get-docker/). See [Install Docker](INSTALLATION.md#install-docker).
 
-> _Important_: To be able to run the entire application, you may need to increase the memory allocated for docker to at least 8096 MB. See [this post](https://stackoverflow.com/a/44533437) for more details.
+> _Important_: To be able to run the entire application, you may need to increase the memory allocated for docker to at least 10 GB. See [this post](https://stackoverflow.com/a/44533437) for more details. If you are using docker to just run the local web server and not running the full data pipeline, then only 4GB of memory is needed for docker.
 
 Use [`docker compose`](https://docs.docker.com/compose/) to run the full application:
 
@@ -25,14 +25,21 @@ The data pipeline container can run the entire data pipeline, or any individual 
 
 The data server will make the files created by the data pipeline container available to the web server. The data pipeline container mounts the local repo directories to read and write files. The data server presents the local files to the webserver to render the map and downloadable files.
 
-The web server will run the application website. After it initializes, you should be able to open the web server in your browser at [`http://localhost:8000`](http://localhost:8000). If the data pipeline container is set to run the full data pipeline, the website will not pick up the changes until the pipeline completes.
+The web server will run the application website. After it initializes, you should be able to open the web server in your browser at [`http://localhost:8000`](http://localhost:8000). 
 
-In order for docker to pick up code changes, the images will need to be rebuilt. If there are code changes in the data folder, the data pipeline image should be rebuilt. If there are code changes in the the client folder, the web server image should be rebuilt. The data server image should never have to be rebuilt.
+Previously, the web server became available immediately after launching docker compose. This meant the website could be up before the data pipeline finished scoring and creating the DAC map tiles. The setup has been changed so the web server will not start until the data server has been started, and the data server will not start until the data pipeline finishes whatever start up command it was given.
+
+In order for docker to pick up code changes, the images will need to be rebuilt. If there are code changes in the data folder, the data pipeline image should be rebuilt. If there are code changes in the the client folder, the web server image should be rebuilt. The data server image should rarely ever have to be rebuilt.
 
 Command to rebuild the data pipeline image:
 
 ```sh
 $ docker build ./data/data-pipeline -t 'j40_data_pipeline'
+```
+Command to rebuild the data server image:
+
+```sh
+$ docker build ./data/data-serve -t 'j40_score_server'
 ```
 
 Command to rebuild the web server image:
@@ -40,5 +47,6 @@ Command to rebuild the web server image:
 ```sh
 $ docker build ./client -t 'j40_website'
 ```
+Depending on what code has changed, it may be necessary to clear the cache for the image rebuild. If the image rebuild fails, insert this flag immediately after "build": "--no-cache"
 
-Once one or both images are rebuilt, you can re-run the docker compose command.
+Once the required images are rebuilt, you can re-run the docker compose command.

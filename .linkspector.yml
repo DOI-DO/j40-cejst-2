@@ -2,3 +2,5 @@ dirs:
   - .
 ignorePatterns:
   - pattern: '^http://localhost.*$'
+excludedFiles:
+  - ./DATASETS.md

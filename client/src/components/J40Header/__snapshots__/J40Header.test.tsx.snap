@@ -161,24 +161,11 @@ exports[`rendering of the J40Header checks if component renders 1`] = `
       </div>
     </div>
     <div>
-      <div
-        class="usa-alert usa-alert--info"
-        data-testid="alert"
-      >
-        <div
-          class="usa-alert__body"
-        >
-          <h1
-            class="usa-alert__heading"
-          >
-            Version 2.0 of the tool is now available
-          </h1>
-          <p
-            class="usa-alert__text"
-          >
-            The Council on Environmental Quality (CEQ) made the 2.0 version of the tool available on Dec 20, 2024.
-          </p>
-        </div>
+      <div>
+        <strong>
+          This tool has been updated.
+        </strong>
+         The 2.0 version of the tool was released on Dec 20, 2024.
       </div>
     </div>
     <div

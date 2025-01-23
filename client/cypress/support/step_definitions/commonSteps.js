@@ -30,11 +30,14 @@ When(`I click on the {string} button in the navigation`, (page) => {
 
 When(`I look for the {string} CTA`, (ctaString) => {
   cy.get(`[data-cy="${hyphenizeString(ctaString)}-block"]`).as('CTA_block');
-  cy.get('@CTA_block').scrollIntoView().should('be.visible');
+  cy.get('@CTA_block').scrollIntoView();
+  cy.get('@CTA_block').should('be.visible');
 });
 
 When(`I look for the {string}`, (footer) => {
-  cy.get(`[data-cy="${hyphenizeString(footer)}-primary-block"]`).scrollIntoView().should('be.visible');
+  cy.get(`[data-cy="${hyphenizeString(footer)}-primary-block"]`).as('string_block');
+  cy.get('@string_block').scrollIntoView();
+  cy.get('@string_block').should('be.visible');
 });
 
 // Common Thens:

@@ -5,6 +5,7 @@ import shutil
 import sys
 import uuid
 import zipfile
+import pandas as pd
 from pathlib import Path
 from typing import List
 from typing import Union
@@ -346,6 +347,57 @@ def zip_directory(
     )
     zipdir(f"{origin_zip_directory}/", zipf)
     zipf.close()
+
+
+def average_tract_translate(
+    df: pd.DataFrame,
+    xwalk: pd.DataFrame,
+    tract_year_in: str = "GEOID10_TRACT",
+    tract_year_out: str = "GEOID20_TRACT",
+) -> pd.DataFrame:
+    """
+    Minimally tested prototype of an averaging function
+
+    Can be used to translate between 2010 and 2020 tract boundaries.
+    For example, if we update to ACS data with 2020 boundaries, we will need to
+    translate all data sources that are still using 2010 boundaries. To do this,
+    average_tract_translate() will take each 2020 tract ID and find all the 2010
+    tracts that are mapped to it, and then take the mean of each column across
+    these mapped 2010 tracts.
+
+    Note that this function only works on numeric columns.
+
+    The current set-up requires the crosswalk to be passed in as an argument;
+    it may be easier to upload a static copy of the crosswalk
+    and read it in at the beginning of the function.
+
+    Crosswalk:
+    https://www2.census.gov/geo/docs/maps-data/data/rel2020/tract/tab20_tract20_tract10_natl.txt
+
+    Explanation of crosswalk:
+    https://www2.census.gov/geo/pdfs/maps-data/data/rel2020/tract/explanation_tab20_tract20_tract10.pdf
+
+    NB: Crosswalks for territories are stored in separate files.
+    """
+
+    # pre-process xwalk
+    # could be uploaded as a static copy and read in here
+    xwalk = xwalk.rename(
+        columns={
+            "GEOID_TRACT_10": "GEOID10_TRACT",
+            "GEOID_TRACT_20": "GEOID20_TRACT",
+        }
+    )
+    xwalk = xwalk[["GEOID10_TRACT", "GEOID20_TRACT"]]
+
+    # merge xwalk into input data
+    merged_df = df.merge(xwalk, how="left", on=tract_year_in)
+
+    # group by average
+    averaged_df = merged_df.groupby(tract_year_out).mean()
+
+    # reindex (bc input df doesn't have tract ID as index but rather as column)
+    return averaged_df.reset_index()
 
 
 def load_yaml_dict_from_file(
