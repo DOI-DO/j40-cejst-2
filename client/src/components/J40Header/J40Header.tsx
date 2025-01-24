@@ -239,7 +239,6 @@ const J40Header = ({location}:IJ40Header) => {
 
       {/* Banners */}
       <GovernmentBanner />
-      <UpdateBanner/>
 
       {/* Logo and Navigation */}
       <J40MainGridContainer>
