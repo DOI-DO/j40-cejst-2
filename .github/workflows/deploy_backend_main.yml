@@ -1,7 +1,9 @@
 name: Deploy Backend Main
 on:
   push:
-    branches: [main]
+    # EDGI: DISABLE THIS WORKFLOW FOR NOW. It comes from the original DOI
+    # implementation, and we don't have the same deployment setup.
+    branches: [not-a-real-branch]
     paths:
       - "data/**"
       - ".github/workflows/deploy_backend_main.yml"

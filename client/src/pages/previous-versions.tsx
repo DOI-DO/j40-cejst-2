@@ -3,14 +3,14 @@ import {useIntl} from 'gatsby-plugin-intl';
 import {useWindowSize} from 'react-use';
 
 import {Card, CardBody, CardFooter, CardGroup, CardHeader, Grid, Button} from '@trussworks/react-uswds';
-import DatasetsButton from '../components/DatasetsButton';
+// import DatasetsButton from '../components/DatasetsButton';
 import DownloadButton from '../components/DownloadButton';
 import J40MainGridContainer from '../components/J40MainGridContainer';
 import Layout from '../components/layout';
 import SubPageNav from '../components/SubPageNav';
 
 import * as PREV_VER_COPY from '../data/copy/previousVer';
-import {PAGES_ENDPOINTS, USWDS_BREAKPOINTS, DATA_SURVEY_LINKS} from '../data/constants';
+import {PAGES_ENDPOINTS, USWDS_BREAKPOINTS} from '../data/constants';
 import {getDownloadFileUrl} from '../data/copy/downloads';
 import {VERSIONS} from '../data/copy/methodology';
 // @ts-ignore
@@ -36,7 +36,7 @@ const PreviousVersions = ({location}: IPreviousVersionsProps) => {
 
         <section className={'page-heading'}>
           <h1 data-cy={'about-page-heading'}>{intl.formatMessage(PREV_VER_COPY.PAGE.TITLE)}</h1>
-          <DatasetsButton href= {intl.locale === 'es' ? DATA_SURVEY_LINKS.ES : DATA_SURVEY_LINKS.EN} />
+          {/* <DatasetsButton href= {intl.locale === 'es' ? DATA_SURVEY_LINKS.ES : DATA_SURVEY_LINKS.EN} /> */}
         </section>
 
         <Grid row gap className={'j40-mb5-mt3'}>

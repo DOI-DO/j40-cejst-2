@@ -18,7 +18,7 @@ module.exports = {
     image: '/static/favicon.ico',
     siteUrl: process.env.SITE_URL || 'http://localhost:8000',
   },
-  pathPrefix: process.env.PATH_PREFIX || '',
+  pathPrefix: process.env.PATH_PREFIX || 'j40-cejst-2',
   plugins: [
     {
       resolve: 'gatsby-plugin-sass',

@@ -5,12 +5,12 @@ import {useWindowSize} from 'react-use';
 
 import Categories from '../components/Categories';
 import DatasetContainer from '../components/DatasetContainer';
-import DatasetsButton from '../components/DatasetsButton';
+// import DatasetsButton from '../components/DatasetsButton';
 import J40MainGridContainer from '../components/J40MainGridContainer';
 import Layout from '../components/layout';
 import SubPageNav from '../components/SubPageNav';
 
-import {DATA_SURVEY_LINKS, PAGES_ENDPOINTS, USWDS_BREAKPOINTS} from '../data/constants';
+import {PAGES_ENDPOINTS, USWDS_BREAKPOINTS} from '../data/constants';
 import * as METHODOLOGY_COPY from '../data/copy/methodology';
 
 interface MethodPageProps {
@@ -29,7 +29,7 @@ const IndexPage = ({location}: MethodPageProps) => {
 
         <section className={'page-heading'}>
           <h1>{intl.formatMessage(METHODOLOGY_COPY.PAGE.HEADING)}</h1>
-          <DatasetsButton href= {intl.locale === 'es' ? DATA_SURVEY_LINKS.ES : DATA_SURVEY_LINKS.EN} />
+          {/* <DatasetsButton href= {intl.locale === 'es' ? DATA_SURVEY_LINKS.ES : DATA_SURVEY_LINKS.EN} /> */}
         </section>
 
         <Grid row gap className={'j40-mt3'}>

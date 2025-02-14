@@ -3,25 +3,25 @@ import * as React from 'react';
 import {useWindowSize} from 'react-use';
 
 import {Grid} from '@trussworks/react-uswds';
-import AboutCard from '../components/AboutCard/AboutCard';
-import AboutCardsContainer from '../components/AboutCard/AboutCardsContainer';
-import DatasetsButton from '../components/DatasetsButton';
-import HowYouCanHelp from '../components/HowYouCanHelp';
+// import AboutCard from '../components/AboutCard/AboutCard';
+// import AboutCardsContainer from '../components/AboutCard/AboutCardsContainer';
+// import DatasetsButton from '../components/DatasetsButton';
+// import HowYouCanHelp from '../components/HowYouCanHelp';
 import J40MainGridContainer from '../components/J40MainGridContainer';
 import Layout from '../components/layout';
 import SubPageNav from '../components/SubPageNav';
 
-import {GITHUB_LINK, GITHUB_LINK_ES} from '../constants';
-import {DATA_SURVEY_LINKS, PAGES_ENDPOINTS, USWDS_BREAKPOINTS} from '../data/constants';
+// import {GITHUB_LINK, GITHUB_LINK_ES} from '../constants';
+import {PAGES_ENDPOINTS, USWDS_BREAKPOINTS} from '../data/constants';
 import * as ABOUT_COPY from '../data/copy/about';
-import {FEEDBACK_EMAIL} from '../data/copy/common';
+// import {FEEDBACK_EMAIL} from '../data/copy/common';
 
 
-import commentIcon from // @ts-ignore
-  '/node_modules/uswds/dist/img/usa-icons/comment.svg';
+// import commentIcon from // @ts-ignore
+//  '/node_modules/uswds/dist/img/usa-icons/comment.svg';
 
-import githubIcon from // @ts-ignore
-  '/node_modules/uswds/dist/img/usa-icons/github.svg';
+// import githubIcon from // @ts-ignore
+//  '/node_modules/uswds/dist/img/usa-icons/github.svg';
 
 interface IAboutPageProps {
   location: Location;
@@ -40,7 +40,7 @@ const AboutPage = ({location}: IAboutPageProps) => {
 
         <section className={'page-heading'}>
           <h1 data-cy={'about-page-heading'}>{intl.formatMessage(ABOUT_COPY.PAGE.TITLE)}</h1>
-          <DatasetsButton href= {intl.locale === 'es' ? DATA_SURVEY_LINKS.ES : DATA_SURVEY_LINKS.EN} />
+          {/* <DatasetsButton href= {intl.locale === 'es' ? DATA_SURVEY_LINKS.ES : DATA_SURVEY_LINKS.EN} /> */}
         </section>
 
         <Grid row gap className={'j40-mb5-mt3'}>
@@ -97,7 +97,7 @@ const AboutPage = ({location}: IAboutPageProps) => {
         </J40MainGridContainer>
       </J40MainGridContainer>
 
-      <J40MainGridContainer>
+      {/* <J40MainGridContainer>
         <h2>{intl.formatMessage(ABOUT_COPY.GET_INVOLVED.TITLE)}</h2>
         <AboutCardsContainer>
           <AboutCard
@@ -132,7 +132,7 @@ const AboutPage = ({location}: IAboutPageProps) => {
           <HowYouCanHelp/>
         </Grid>
 
-      </J40MainGridContainer>
+      </J40MainGridContainer> */}
     </Layout>);
 };
 

@@ -42,8 +42,7 @@ export const CONTENT = {
   <FormattedMessage
     id={'about.page.paragraph.2'}
     defaultMessage={`
-      CEQ will update the tool, after reviewing public feedback,
-      research, and the availability of new data. The current version of the
+      The current version of the
       tool is version {version}.
     `}
     description={'Navigate to the About page. This is the paragraph 4'}

@@ -8,8 +8,8 @@ import {hyphenizeString} from '../../../cypress/integration/common/helpers';
 
 import * as styles from './dsContainer.module.scss';
 import * as METHODOLOGY_COPY from '../../data/copy/methodology';
-import {PAGES_ENDPOINTS, DATA_SURVEY_LINKS} from '../../data/constants';
-import DatasetsButton from '../DatasetsButton';
+import {PAGES_ENDPOINTS} from '../../data/constants';
+// import DatasetsButton from '../DatasetsButton';
 
 
 const DatasetContainer = () => {
@@ -35,7 +35,7 @@ const DatasetContainer = () => {
             <Grid desktop={{col: 1}}>
             </Grid>
             <Grid desktop={{col: 4}}>
-              <DatasetsButton href= {intl.locale === 'es' ? DATA_SURVEY_LINKS.ES : DATA_SURVEY_LINKS.EN} />
+              {/* <DatasetsButton href= {intl.locale === 'es' ? DATA_SURVEY_LINKS.ES : DATA_SURVEY_LINKS.EN} /> */}
             </Grid>
           </Grid>
 

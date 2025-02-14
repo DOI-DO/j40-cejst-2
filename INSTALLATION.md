@@ -1,8 +1,9 @@
 # Justice40 Tool Installation
 
-_[¡Lea esto en español!](INSTALLATION-es.md)_
+_[¡Lea esto en español!](INSTALLATION-es.md) **Tenga en cuenta:** la guía en español no se ha actualizado desde que este proyecto fue trasladado fuera de la gestión gubernamental.
 
-This page documents the installation steps for some of the prerequisite software needed to work with this project. It covers steps for macOS and Win10. If you are not on either of those platforms, install the software using steps appropriate for your operating system and device.
+
+This page documents the installation steps for some of the prerequisite software needed to work with this project. It covers steps for macOS and Win10. If you are not on either of those platforms, install the software using steps appropriate for your operating system and device. It now also includes some notes on deployment
 
 > :bulb: **NOTE**  
 > If all you want to do is try out the application locally, visit [`QUICKSTART.md`](QUICKSTART.md).
@@ -110,3 +111,12 @@ After you've completed the prerequisites, you can continue on to specific instal
 | Frontend Client                       | [Frontend Client Instructions](client/README.md)           |
 | Data Pipeline and Scoring Application | [Data Pipeline Instructions](data/data-pipeline/README.md) |
 | Deployment Process                    | [Github Workflows README](.github/workflows/README.md)     |
+
+
+### Notes on Cloudfront Deployment as of Early February
+
+At present, the frontend server runs on Github Pages, while map tiles are served from an S3 bucket in AWS, behind a Cloudfront CDN "Distribution" (AWS's term for an individual Cloudfront instance). Copies of the underlying data sources can also be found on the same AWS service.
+
+The frontend server (`client`) requires that any assets it makes use of (map tiles, `tracts.json`, etc) include an `Access-Control-Allow-Origin` or `CORS` header.  AWS S3 and Cloudfront do not generate this header by default. Therefore, a Cloudfront Distribution must be manually configured to add the header.  This is done by navigating to the Distribution in question, finding the  Behaviours tab, and modifying the `Response headers policy` field.  Since this is an open project, and also because the base URL for the project maps is likely to change with little notice, we recommend using the extremely permissive `CORS-With-Preflight` setting in that field.
+
+While CORS is intrinsically tricky, and finding the right documentation for Cloudfront is difficult, the actual setting is extremely simple, and this configuration can be set up easily when creating the distribution.

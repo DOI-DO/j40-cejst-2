@@ -3,13 +3,13 @@ import {useIntl} from 'gatsby-plugin-intl';
 import * as React from 'react';
 import {useWindowSize} from 'react-use';
 
-import DatasetsButton from '../components/DatasetsButton';
+// import DatasetsButton from '../components/DatasetsButton';
 import J40MainGridContainer from '../components/J40MainGridContainer';
 import Layout from '../components/layout';
 import ReleaseUpdate from '../components/ReleaseUpdate';
 import SubPageNav from '../components/SubPageNav';
 
-import {DATA_SURVEY_LINKS, PAGES_ENDPOINTS, USWDS_BREAKPOINTS} from '../data/constants';
+import {PAGES_ENDPOINTS, USWDS_BREAKPOINTS} from '../data/constants';
 import * as DOWNLOADS_COPY from '../data/copy/downloads';
 interface IDownloadsPageProps {
   location: Location;
@@ -26,7 +26,7 @@ const DownloadsPage = ({location}: IDownloadsPageProps) => {
 
         <section className={'page-heading'}>
           <h1>{intl.formatMessage(DOWNLOADS_COPY.PAGE_INTRO.PAGE_HEADING1)}</h1>
-          <DatasetsButton href= {intl.locale === 'es' ? DATA_SURVEY_LINKS.ES : DATA_SURVEY_LINKS.EN} />
+          {/* <DatasetsButton href= {intl.locale === 'es' ? DATA_SURVEY_LINKS.ES : DATA_SURVEY_LINKS.EN} /> */}
         </section>
 
         <Grid row gap className={'j40-mb5-mt3'}>

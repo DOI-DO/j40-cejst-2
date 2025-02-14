@@ -49,25 +49,7 @@ exports[`rendering of the DatasetContainer checks if various text fields are vis
         <div
           class="desktop:grid-col-4"
           data-testid="grid"
-        >
-          <a
-            href="https://eop.gov1.qualtrics.com/jfe/form/SV_3WC1hmbqoS4Ak2G"
-            rel="noreferrer"
-            target="_blank"
-          >
-            <button
-              class="usa-button"
-              data-testid="button"
-              type="button"
-            >
-              Share data sources with CEQ
-              <img
-                alt="launch icon"
-                src="test-file-stub"
-              />
-            </button>
-          </a>
-        </div>
+        />
       </div>
       <div
         class="grid-row"

@@ -36,7 +36,7 @@ export const METH_2_0_RELEASE_DATE = new Date(2024, 11, 20, 11, 59, 59); // Dec 
 // Update Banner
 export const UPDATE_BANNER_HEADING_LARGE = <FormattedMessage
   id={'common.pages.alerts.banner.update.heading.large'}
-  defaultMessage={'Version 2.0 of the tool is now available'}
+  defaultMessage={'This is an unofficial copy of the CEJST Tool. We are working on an overhaul, but in the meantime some links and text may incorrectly suggest that this site is affiliated with the US Government'}
   description={'Alert heading that appears at the top of pages'}
 />;
 
@@ -56,7 +56,7 @@ export const UPDATE_BANNER_CONTENT_LARGE = <FormattedMessage
 
 export const UPDATE_BANNER_CONTENT_SMALL = <FormattedMessage
   id={'common.pages.alerts.banner.update.content.small'}
-  defaultMessage={`<bold>This tool has been updated.</bold> The 2.0 version of the tool was released on {relDate}.`}
+  defaultMessage={`<bold>This is an unofficial copy of the CEJST Tool.</bold>  We are working on an overhaul, but in the meantime some links and text may incorrectly suggest that this site is affiliated with the US Government.`}
   description={`Alert body that appears at the top of pages.`}
   values={{
     bold: boldFn,

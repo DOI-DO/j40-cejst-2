@@ -1,0 +1,140 @@
+name: Build Client
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/deploy_frontend_main.yml"
+      - "client/**/*"
+  pull_request:
+    paths:
+      - ".github/workflows/deploy_frontend_main.yml"
+      - "client/**/*"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  node-version: 18
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ env.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.node-version }}
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          # See the client readme for more info on environment variables:
+          # https://github.com/usds/justice40-tool/blob/main/client/README.md
+          DATA_SOURCE: cdn
+          SITE_URL: "${{ vars.SITE_URL }}"
+          PATH_PREFIX: "${{ vars.PATH_PREFIX }}"
+
+      - name: Get directory contents
+        run: ls -la public
+
+      - name: Upload static files as artifact
+        id: deployment
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./client/public
+
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ env.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.node-version }}
+
+      - name: Install
+        run: npm ci
+
+      - name: Unit tests
+        run: npm test
+
+  lint:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ env.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.node-version }}
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: License Check
+        run: npm run licenses
+
+      # TODO: This was disabled in the original DOI repo. Much of the code here
+      # is pretty out of date, so it is nowhere near passing a security audit,
+      # but it would be good to fix that and re-enable this.
+      # 
+      # - name: Check for security vulnerabilities
+      #   run: npm audit --production
+
+  translations:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ env.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.node-version }}
+
+      - name: Install
+        run: npm ci
+
+      - name: Spanish translation test
+        run: npm run test:intl-translations
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs:
+      - build
+      - test
+      - lint
+      - translations
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

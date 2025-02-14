@@ -4,7 +4,15 @@
 
 _[¡Lea esto en español!](README-es.md)_
 
-This repo contains the code, processes, and documentation for the data and tech powering the [Climate and Economic Justice Screening Tool (CEJST)](https://screeningtool.geoplatform.gov).
+This repo contains the code, processes, and documentation for the data and tech powering the former [Climate and Economic Justice Screening Tool (CEJST)](https://screeningtool.geoplatform.gov).
+
+## Status January 2025
+
+The old CEJST has been taken offline by the incoming adminsitration. This fork is maintained by communities who still require access to the tool, and who hope to gradually improve it.  
+
+**Many of the instructions in the README are not appropriate at the current stage of development.** In particular, the use of Docker and docker-compose is not advised. Instead, in this initial stage, we are only building the main web server (found in `client`). This is a Gatsby website, which uses React components to build a static site in the `client/public` folder. Further instructions are coming soon.  For now, thank you for your interest! Please use [Github issues](https://github.com/edgi-govdata-archiving/j40-cejst-2/issues) to track problems and feature requests.  
+
+-------------
 
 ## Background
 

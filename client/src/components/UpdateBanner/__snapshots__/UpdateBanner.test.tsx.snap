@@ -13,7 +13,7 @@ exports[`rendering of the UpdateBanner renders large version before cutoff date 
         <h1
           class="usa-alert__heading"
         >
-          Version 2.0 of the tool is now available
+          This is an unofficial copy of the CEJST Tool. We are working on an overhaul, but in the meantime some links and text may incorrectly suggest that this site is affiliated with the US Government
         </h1>
         <p
           class="usa-alert__text"
@@ -31,9 +31,9 @@ exports[`rendering of the UpdateBanner renders small version at cutoff date 1`] 
   <div>
     <div>
       <strong>
-        This tool has been updated.
+        This is an unofficial copy of the CEJST Tool.
       </strong>
-       The 2.0 version of the tool was released on Dec 20, 2024.
+        We are working on an overhaul, but in the meantime some links and text may incorrectly suggest that this site is affiliated with the US Government.
     </div>
   </div>
 </DocumentFragment>
